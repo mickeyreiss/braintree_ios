@@ -9,4 +9,4 @@ xcode_sdk:
   - iphonesimulator8.0
   - iphonesimulator7.1
 install: bundle install && bundle exec pod install
-script: xctool -sdk ${TRAVIS_XCODE_SDK} -workspace Braintree.xcworkspace -scheme ${TRAVIS_XCODE_SCHEME} test
+script: xctool -sdk ${TRAVIS_XCODE_SDK} -workspace Braintree.xcworkspace -scheme ${TRAVIS_XCODE_SCHEME} test ONLY_ACTIVE_ARCH=NO
