@@ -5,4 +5,8 @@ xcode_scheme:
   - Braintree-API-Specs
   - Braintree-Payments-UI-Specs
   - Braintree-PayPal-Specs
+xcode_sdk:
+  - iphonesimulator8.0
+  - iphonesimulator7.1
 install: bundle install && bundle exec pod install
+script: xctool -sdk #{TRAVIS_XCODE_SDK} -workspace Braintree.xcworkspace -scheme #{TRAVIS_XCODE_SCHEME} test
