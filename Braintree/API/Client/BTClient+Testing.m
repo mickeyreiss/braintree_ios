@@ -81,7 +81,7 @@ NSString *BTClientTestDefaultMerchantIdentifier = @"integration_merchant_id";
 }
 
 + (NSURL *)testClientApiURLForMerchant:(NSString *)merchantIdentifier {
-    return [NSURL URLWithString:[NSString stringWithFormat:@"http://localhost:3000/merchants/%@/client_api/", merchantIdentifier ?: BTClientTestDefaultMerchantIdentifier]];
+    return [NSURL URLWithString:[NSString stringWithFormat:@"https://sandbox.braintreegateway.com/merchants/%@/client_api/", merchantIdentifier ?: BTClientTestDefaultMerchantIdentifier]];
 }
 
 @end
