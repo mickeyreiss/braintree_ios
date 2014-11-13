@@ -5,4 +5,4 @@ xcode_scheme:
   - Braintree-API-Specs
   - Braintree-Payments-UI-Specs
   - Braintree-PayPal-Specs
-install: bundle exec pod install
+install: bundle install && bundle exec pod install
