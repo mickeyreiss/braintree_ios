@@ -13,6 +13,7 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
 @property (nonatomic, readwrite, strong) BTAPIResponseParser *clientTokenParser;
 @property (nonatomic, readwrite, copy) NSString *authorizationFingerprint;
 @property (nonatomic, readwrite, strong) NSURL *configURL;
+@property (nonatomic, copy) NSString *originalValue;
 
 @end
 
@@ -25,6 +26,7 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
         self.clientTokenParser = [self decodeClientToken:JSONString error:error];
         self.authorizationFingerprint = [self.clientTokenParser stringForKey:BTClientTokenKeyAuthorizationFingerprint];
         self.configURL = [self.clientTokenParser URLForKey:BTClientTokenKeyConfigURL];
+        self.originalValue = JSONString;
 
         if (![self validateClientToken:error]) {
             return nil;

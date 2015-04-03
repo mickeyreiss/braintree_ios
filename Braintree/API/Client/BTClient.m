@@ -379,6 +379,28 @@
 }
 #endif
 
+- (void)savePaypalAccount:(NSDictionary *)paypalOneTouchResponse
+                  success:(BTClientPaypalSuccessBlock)successBlock
+                  failure:(BTClientFailureBlock)failureBlock {
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"paypalAccounts"] = @[paypalOneTouchResponse];
+    parameters[@"authorization_fingerprint"] = self.clientToken.authorizationFingerprint;
+    [self.clientApiHttp POST:@"v1/payment_methods/paypal_accounts"
+                  parameters:parameters
+                  completion:^(BTHTTPResponse *response, NSError *error) {
+                      if (response.isSuccess) {
+                          if (successBlock) {
+                              NSArray *payPalPaymentMethods = [response.object arrayForKey:@"paypalAccounts" withValueTransformer:[BTClientPaymentMethodValueTransformer sharedInstance]];
+                              successBlock([payPalPaymentMethods firstObject]);
+                          }
+                      } else {
+                          if (failureBlock) {
+                              failureBlock(error);
+                          }
+                      }
+                  }];
+}
+
 - (void)savePaypalPaymentMethodWithAuthCode:(NSString*)authCode
                    applicationCorrelationID:(NSString *)correlationId
                                     success:(BTClientPaypalSuccessBlock)successBlock

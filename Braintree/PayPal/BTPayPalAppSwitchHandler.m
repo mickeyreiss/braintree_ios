@@ -6,8 +6,8 @@
 #import "BTLogger_Internal.h"
 #import "BTErrors+BTPayPal.h"
 
-#import "PayPalMobile.h"
-#import "PayPalTouch.h"
+#import "PayPalOneTouchRequest.h"
+#import "PayPalOneTouchCore.h"
 
 @implementation BTPayPalAppSwitchHandler
 
@@ -34,7 +34,7 @@
         return NO;
     }
 
-    if (![PayPalTouch canHandleURL:url sourceApplication:sourceApplication]) {
+    if (![PayPalOneTouchCore canParseURL:url sourceApplication:sourceApplication]) {
         [self.client postAnalyticsEvent:@"ios.paypal.appswitch.can-handle.paypal-cannot-handle"];
         return NO;
     }
@@ -42,59 +42,62 @@
 }
 
 - (void)handleReturnURL:(NSURL *)url {
-    PayPalTouchResult *result = [PayPalTouch parseAppSwitchURL:url];
-    NSString *code;
-    switch (result.resultType) {
-        case PayPalTouchResultTypeError: {
-            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.error"];
-            NSError *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain code:BTPayPalUnknownError userInfo:nil];
-            [self informDelegateDidFailWithError:error];
-            return;
-        }
-        case PayPalTouchResultTypeCancel:
-            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel"];
-            if (result.error) {
-                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel-error"];
-                [[BTLogger sharedLogger] error:@"PayPal Wallet error: %@", result.error];
+    [PayPalOneTouchCore parseResponseURL:url completionBlock:^(PayPalOneTouchCoreResult *result) {
+        switch (result.type) {
+            case PayPalOneTouchResultTypeError: {
+                // TODO: switch analytics based on appswitch vs. browser switch
+                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.error"];
+                NSError *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain code:BTPayPalUnknownError userInfo:nil];
+                [self informDelegateDidFailWithError:error];
+                return;
             }
-            [self informDelegateDidCancel];
-            return;
-        case PayPalTouchResultTypeSuccess:
-            code = result.authorization[@"response"][@"code"];
-            break;
-    }
+            case PayPalOneTouchResultTypeCancel:
+                // TODO: switch analytics based on appswitch vs. browser switch
+                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel"];
+                if (result.error) {
+                    [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel-error"];
+                    [[BTLogger sharedLogger] error:@"PayPal Wallet error: %@", result.error];
+                    return;
+                }
+                [self informDelegateDidCancel];
+                return;
+            case PayPalOneTouchResultTypeSuccess:
+//                if (!code) {
+//                    NSError *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain code:BTPayPalUnknownError userInfo:@{NSLocalizedDescriptionKey: @"Auth code not found in PayPal Touch app switch response" }];
+//                    [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.code-error"];
+//                    [self informDelegateDidFailWithError:error];
+//                    return;
+//                }
+// TODO: Will we ever receive PayPalOneTouchResultTypeSuccess without a code?
 
-    if (!code) {
-        NSError *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain code:BTPayPalUnknownError userInfo:@{NSLocalizedDescriptionKey: @"Auth code not found in PayPal Touch app switch response" }];
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.code-error"];
-        [self informDelegateDidFailWithError:error];
-        return;
-    }
+                // TODO: switch analytics based on appswitch vs. browser switch
+                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.authorized"];
+                
+                [self informDelegateWillCreatePayPalPaymentMethod];
 
-    [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.authorized"];
-
-    [self informDelegateWillCreatePayPalPaymentMethod];
-
-    [self.client savePaypalPaymentMethodWithAuthCode:code
-                            applicationCorrelationID:[self.client btPayPal_applicationCorrelationId]
-                                             success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
-                                                 NSString *userDisplayStringFromAppSwitchResponse = result.authorization[@"user"][@"display_string"];
-                                                 if (paypalPaymentMethod.email == nil && [userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
-                                                     BTMutablePayPalPaymentMethod *mutablePayPalPaymentMethod = [paypalPaymentMethod mutableCopy];
-                                                     mutablePayPalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
-                                                     paypalPaymentMethod = mutablePayPalPaymentMethod;
-                                                 }
-                                                 [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
-                                                 [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
-                                             } failure:^(NSError *error) {
-                                                 [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.client-failure"];
-                                                 [self informDelegateDidFailWithError:error];
-                                             }];
-
+                // TODO: is the application correlation id included in the initial response?
+                [self.client savePaypalAccount:result.response
+                                       success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
+                                           // TODO: How do I obtain the user display string?
+                                           NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
+                                           if (paypalPaymentMethod.email == nil && [userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
+                                               BTMutablePayPalPaymentMethod *mutablePayPalPaymentMethod = [paypalPaymentMethod mutableCopy];
+                                               mutablePayPalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
+                                               paypalPaymentMethod = mutablePayPalPaymentMethod;
+                                           }
+                                           [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
+                                           [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
+                                       } failure:^(NSError *error) {
+                                           [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.client-failure"];
+                                           [self informDelegateDidFailWithError:error];
+                                       }];
+                
+                break;
+        }
+    }];
 }
 
 - (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)theDelegate error:(NSError *__autoreleasing *)error {
-
     client = [client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
         metadata.source = BTClientMetadataSourcePayPalApp;
     }];
@@ -137,22 +140,34 @@
     self.delegate = theDelegate;
     self.client = client;
 
-    PayPalConfiguration *configuration = client.btPayPal_configuration;
-    configuration.callbackURLScheme = self.returnURLScheme;
-
-    BOOL payPalTouchDidAuthorize = [PayPalTouch authorizeScopeValues:self.client.btPayPal_scopes configuration:configuration];
-    if (payPalTouchDidAuthorize) {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.success"];
-        return YES;
+    NSString *clientId;
+    if ([self.client.btPayPal_environment isEqualToString:PayPalEnvironmentMock] && client.configuration.payPalClientId == nil) {
+        clientId = @"mock-paypal-client-id";
     } else {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.failed"];
-        if (error) {
-            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                         code:BTAppSwitchErrorFailed
-                                     userInfo:@{NSLocalizedDescriptionKey:@"Failed to initiate PayPal app switch."}];
-        }
-        return NO;
+        clientId = client.configuration.payPalClientId;
     }
+
+    PayPalOneTouchAuthorizationRequest *request =
+    [PayPalOneTouchAuthorizationRequest requestWithScopeValues:client.btPayPal_scopes
+                                                    privacyURL:client.configuration.payPalPrivacyPolicyURL
+                                                  agreementURL:client.configuration.payPalMerchantUserAgreementURL
+                                                      clientID:clientId
+                                                   environment:client.btPayPal_environment
+                                             callbackURLScheme:[self returnURLScheme]];
+    request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
+
+    [request performWithCompletionBlock:^(BOOL success, __unused PayPalOneTouchRequestTarget target, NSError *error) {
+        if (success) {
+            // TODO: Switch analytics based on target
+            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.success"];
+        } else {
+            // TODO: Switch analytics based on target
+            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.failed"];
+            [self informDelegateDidFailWithError:error];
+        }
+    }];
+
+    return YES;
 }
 
 - (BOOL)appSwitchAvailableForClient:(BTClient *)client {
@@ -181,19 +196,13 @@
                                userInfo:@{NSLocalizedDescriptionKey: @"PayPal is not enabled for this merchant."}];
     }
 
-    if ([client btPayPal_isTouchDisabled]){
-        return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                   code:BTAppSwitchErrorDisabled
-                               userInfo:@{NSLocalizedDescriptionKey: @"PayPal app switch is not enabled."}];
-    }
-
     if (self.returnURLScheme == nil) {
         return [NSError errorWithDomain:BTAppSwitchErrorDomain
                                    code:BTAppSwitchErrorIntegrationReturnURLScheme
                                userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a returnURLScheme. See +[Braintree setReturnURLScheme:]." }];
     }
 
-    if (![PayPalTouch canAppSwitchForUrlScheme:self.returnURLScheme]) {
+    if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:self.returnURLScheme]) {
         NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", self.returnURLScheme];
         return [NSError errorWithDomain:BTAppSwitchErrorDomain
                                    code:BTAppSwitchErrorAppNotAvailable

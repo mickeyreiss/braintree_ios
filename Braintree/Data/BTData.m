@@ -1,6 +1,6 @@
 #import "BTData.h"
 #import "DeviceCollectorSDK.h"
-#import "PayPalMobile.h"
+#import "PayPalOneTouchCore.h"
 #import "BTClient+BTPayPal.h"
 #import "BTLogger_Internal.h"
 
@@ -35,15 +35,6 @@ static NSString *BTDataSharedMerchantId = @"600000";
 
     if (!client) {
         return nil;
-    }
-
-    if ([client btPayPal_isPayPalEnabled]) {
-        NSError *error;
-        if (![client btPayPal_preparePayPalMobileWithError:&error]) {
-            if (error) {
-                [[BTLogger sharedLogger] log:@"BTData could not initialize underlying PayPal SDK. BTData device data will not include PayPal application correlation id."];
-            }
-        }
     }
 
     self = [super init];

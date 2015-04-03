@@ -212,28 +212,16 @@ NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl
 
 #pragma mark PayPal
 
-- (BTAPIResponseParser *)btPayPal_claims {
+- (BTAPIResponseParser *)payPalConfiguration {
     return [self.configurationParser responseParserForKey:BTConfigurationKeyPayPal];
 }
 
 - (NSString *)btPayPal_clientId {
-    return [self.btPayPal_claims stringForKey:BTConfigurationKeyPayPalClientId];
+    return [self.payPalConfiguration stringForKey:BTConfigurationKeyPayPalClientId];
 }
 
-- (NSString *)btPayPal_environment {
-    return [self.btPayPal_claims stringForKey:BTConfigurationKeyPayPalEnvironment];
-}
-
-- (NSURL *)btPayPal_directBaseURL {
-    NSString *apiUrl = [self.btPayPal_claims stringForKey:BTConfigurationKeyPayPalDirectBaseUrl];
-    NSURL *directBaseURL;
-    if (apiUrl == nil) {
-        directBaseURL = nil;
-    } else {
-        NSString *urlString = [NSString stringWithFormat:@"%@%@", apiUrl, BTConfigurationPayPalBraintreeProxyBasePath];
-        directBaseURL = [NSURL URLWithString:urlString];
-    }
-    return directBaseURL;
+- (NSString *)btPayPal_envirnoment {
+    return [self.payPalConfiguration stringForKey:BTConfigurationKeyPayPalEnvironment];
 }
 
 - (BOOL)btPayPal_isPayPalEnabled {
@@ -241,24 +229,19 @@ NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl
                      withValueTransformer:[BTClientTokenBooleanValueTransformer sharedInstance]];
 }
 
-- (BOOL)btPayPal_isTouchDisabled {
-    return [self.btPayPal_claims boolForKey:BTConfigurationKeyPayPalDisableAppSwitch
-                       withValueTransformer:[BTClientTokenBooleanValueTransformer sharedInstance]];
-}
-
-- (BOOL)btPayPal_isLive {
-    return [self.btPayPal_environment isEqualToString:BTConfigurationPayPalEnvironmentLive];
+-(BOOL)btPayPal_isLive {
+    return [self.payPalEnvirnoment isEqualToString:BTConfigurationPayPalEnvironmentLive];
 }
 
 - (NSString *)btPayPal_merchantName {
     NSString *defaultName = self.btPayPal_isLive ? nil : BTConfigurationPayPalNonLiveDefaultValueMerchantName;
-    return [self.btPayPal_claims stringForKey:BTConfigurationKeyPayPalMerchantName] ?: defaultName;
+    return [self.payPalConfiguration stringForKey:BTConfigurationKeyPayPalMerchantName] ?: defaultName;
 }
 
 - (NSURL *)btPayPal_merchantUserAgreementURL {
     NSURL *defaultURL = self.btPayPal_isLive ? nil : [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl];
 
-    NSURL *url = [self.btPayPal_claims URLForKey:BTConfigurationKeyPayPalMerchantUserAgreementUrl];
+    NSURL *url = [self.payPalConfiguration URLForKey:BTConfigurationKeyPayPalMerchantUserAgreementUrl];
 
     return url ?: defaultURL;
 }
@@ -266,7 +249,7 @@ NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl
 - (NSURL *)btPayPal_privacyPolicyURL {
     NSURL *defaultURL = self.btPayPal_isLive ? nil : [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantPrivacyPolicyUrl];
 
-    NSURL *url = [self.btPayPal_claims URLForKey:BTConfigurationKeyPayPalMerchantPrivacyPolicyUrl];
+    NSURL *url = [self.payPalConfiguration URLForKey:BTConfigurationKeyPayPalMerchantPrivacyPolicyUrl];
 
     return url ?: defaultURL;
 }

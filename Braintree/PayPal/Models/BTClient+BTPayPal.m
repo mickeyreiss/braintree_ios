@@ -1,7 +1,8 @@
 #import "BTClient+BTPayPal.h"
 #import "BTErrors+BTPayPal.h"
 
-#import <PayPalMobile.h>
+#import "PayPalOneTouchCore.h"
+#import "PayPalOneTouchRequest.h"
 #import "BTClient_Internal.h"
 #import "BTClient+Offline.h"
 
@@ -25,85 +26,42 @@ NSString *const BTClientPayPalConfigurationError = @"The PayPal SDK could not be
 #pragma clang diagnostic pop
 }
 
-- (BOOL)btPayPal_preparePayPalMobileWithError:(NSError * __autoreleasing *)error {
-
-    if ([self.configuration.btPayPal_environment isEqualToString:BTConfigurationPayPalEnvironmentOffline]) {
-        [PayPalMobile initializeWithClientIdsForEnvironments:@{@"": @""}];
-        [PayPalMobile preconnectWithEnvironment:PayPalEnvironmentNoNetwork];
-    } else if ([self.configuration.btPayPal_environment isEqualToString: BTConfigurationPayPalEnvironmentLive]) {
-        [PayPalMobile initializeWithClientIdsForEnvironments:@{PayPalEnvironmentProduction: self.configuration.btPayPal_clientId}];
-        [PayPalMobile preconnectWithEnvironment:PayPalEnvironmentProduction];
-    } else if ([self.configuration.btPayPal_environment isEqualToString: BTConfigurationPayPalEnvironmentCustom]) {
-        if (self.configuration.btPayPal_directBaseURL == nil || self.configuration.btPayPal_clientId == nil) {
-            if (error) {
-                *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain
-                                             code:BTMerchantIntegrationErrorPayPalConfiguration
-                                         userInfo:@{ NSLocalizedDescriptionKey: BTClientPayPalConfigurationError }];
-                return NO;
-            }
-        } else {
-            [PayPalMobile addEnvironments:@{ BTClientPayPalMobileEnvironmentName:@{
-                                                     @"api": [self.configuration.btPayPal_directBaseURL absoluteString] } }];
-            [PayPalMobile initializeWithClientIdsForEnvironments:@{BTClientPayPalMobileEnvironmentName: self.configuration.btPayPal_clientId}];
-            [PayPalMobile preconnectWithEnvironment:BTClientPayPalMobileEnvironmentName];
-        }
-    } else {
-        if (error){
-            *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain
-                                         code:BTMerchantIntegrationErrorPayPalConfiguration
-                                     userInfo:@{ NSLocalizedDescriptionKey: BTClientPayPalConfigurationError}];
-            return NO;
-        }
-    }
-
+- (BOOL)btPayPal_preparePayPalMobileWithError:(__unused NSError * __autoreleasing *)error {
     return YES;
 }
 
 - (NSSet *)btPayPal_scopes {
-    return [NSSet setWithObjects:kPayPalOAuth2ScopeFuturePayments, kPayPalOAuth2ScopeEmail, nil];
+    return [NSSet setWithObjects:@"https://uri.paypal.com/services/payments/futurepayments", @"kPayPalOAuth2ScopeEmail", nil];
 }
 
-- (PayPalProfileSharingViewController *)btPayPal_profileSharingViewControllerWithDelegate:(id<PayPalProfileSharingDelegate>)delegate {
-    return [[PayPalProfileSharingViewController alloc] initWithScopeValues:self.btPayPal_scopes
-                                                             configuration:self.btPayPal_configuration
-                                                                  delegate:delegate];
+- (PayPalProfileSharingViewController *)btPayPal_profileSharingViewControllerWithDelegate:(__unused id<PayPalProfileSharingDelegate>)delegate {
+    return nil;
 }
 
 - (BOOL)btPayPal_isPayPalEnabled {
-    return self.configuration.btPayPal_isPayPalEnabled;
+    return self.configuration.payPalEnabled;
 }
 
 - (NSString *)btPayPal_applicationCorrelationId {
-    NSString *payPalEnvironment = self.configuration.btPayPal_environment;
-    if (![payPalEnvironment isEqualToString:PayPalEnvironmentProduction] && ![payPalEnvironment isEqualToString:PayPalEnvironmentSandbox]) {
-        return nil;
-    }
-
-    return [PayPalMobile clientMetadataID];
+    return [PayPalOneTouchCore clientMetadataID];
 }
 
 - (PayPalConfiguration *)btPayPal_configuration {
-    PayPalConfiguration *configuration = [PayPalConfiguration new];
-
-    if ([self.configuration.btPayPal_environment isEqualToString: BTConfigurationPayPalEnvironmentLive]) {
-        configuration.merchantName = self.configuration.btPayPal_merchantName;
-        configuration.merchantPrivacyPolicyURL = self.configuration.btPayPal_privacyPolicyURL;
-        configuration.merchantUserAgreementURL = self.configuration.btPayPal_merchantUserAgreementURL;
-    } else {
-        configuration.merchantName = self.configuration.btPayPal_merchantName ?: BTConfigurationPayPalNonLiveDefaultValueMerchantName;
-        configuration.merchantPrivacyPolicyURL = self.configuration.btPayPal_privacyPolicyURL ?: [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantPrivacyPolicyUrl];
-        configuration.merchantUserAgreementURL = self.configuration.btPayPal_merchantUserAgreementURL ?: [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl];
-    }
-
-    return configuration;
+    return nil;
 }
 
 - (NSString *)btPayPal_environment {
-    return [self.configuration.btPayPal_environment isEqualToString:BTConfigurationPayPalEnvironmentLive] ? PayPalEnvironmentProduction : BTClientPayPalMobileEnvironmentName;
+    if ([self.configuration.payPalEnvirnoment isEqualToString:BTConfigurationPayPalEnvironmentLive]) {
+        return PayPalEnvironmentProduction;
+    } else if ([self.configuration.payPalEnvirnoment isEqualToString:BTConfigurationPayPalEnvironmentOffline]) {
+        return PayPalEnvironmentMock;
+    }
+
+    return nil;
 }
 
 - (BOOL)btPayPal_isTouchDisabled {
-    return self.configuration.btPayPal_isTouchDisabled;
+    return NO;
 }
 
 @end
