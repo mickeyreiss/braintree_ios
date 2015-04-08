@@ -31,7 +31,7 @@ NSString *const BTClientPayPalConfigurationError = @"The PayPal SDK could not be
 }
 
 - (NSSet *)btPayPal_scopes {
-    return [NSSet setWithObjects:@"https://uri.paypal.com/services/payments/futurepayments", @"kPayPalOAuth2ScopeEmail", nil];
+    return [NSSet setWithObjects:@"https://uri.paypal.com/services/payments/futurepayments", @"email", nil];
 }
 
 - (PayPalProfileSharingViewController *)btPayPal_profileSharingViewControllerWithDelegate:(__unused id<PayPalProfileSharingDelegate>)delegate {
