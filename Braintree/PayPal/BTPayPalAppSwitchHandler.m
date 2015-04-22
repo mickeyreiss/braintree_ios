@@ -67,16 +67,17 @@
                                      [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.authorized"];
                                      
                                      [self informDelegateWillCreatePayPalPaymentMethod];
-                                     
+
                                      // TODO: is the application correlation id included in the initial response?
                                      [self.client savePaypalAccount:result.response
                                                             success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
-                                                                // TODO: How do I obtain the user display string?
-                                                                NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
-                                                                if (paypalPaymentMethod.email == nil && [userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
-                                                                    BTMutablePayPalPaymentMethod *mutablePayPalPaymentMethod = [paypalPaymentMethod mutableCopy];
-                                                                    mutablePayPalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
-                                                                    paypalPaymentMethod = mutablePayPalPaymentMethod;
+                                                                if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
+                                                                    if (paypalPaymentMethod.email == nil) {
+                                                                        paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
+                                                                    }
+                                                                    if (paypalPaymentMethod.description == nil) {
+                                                                        paypalPaymentMethod.description = userDisplayStringFromAppSwitchResponse;
+                                                                    }
                                                                 }
                                                                 [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
                                                                 [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];

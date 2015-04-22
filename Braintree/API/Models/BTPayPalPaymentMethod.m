@@ -4,9 +4,13 @@
 
 @implementation BTPayPalPaymentMethod
 
+- (void)setEmail:(NSString *)email {
+    _email = [email copy];
+}
+
 - (id)mutableCopyWithZone:(__unused NSZone *)zone {
     BTMutablePayPalPaymentMethod *mutablePayPalPaymentMethod = [[BTMutablePayPalPaymentMethod alloc] init];
-    mutablePayPalPaymentMethod.email = self.email;
+    _email = self.email;
     mutablePayPalPaymentMethod.locked = self.locked;
     mutablePayPalPaymentMethod.nonce = self.nonce;
     mutablePayPalPaymentMethod.challengeQuestions = [self.challengeQuestions copy];
