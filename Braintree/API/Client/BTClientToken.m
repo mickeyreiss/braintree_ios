@@ -19,14 +19,14 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
 
 @implementation BTClientToken
 
-- (instancetype)initWithClientTokenString:(NSString *)JSONString error:(NSError * __autoreleasing *)error {
+- (instancetype)initWithClientTokenString:(NSString *)clientTokenString error:(NSError * __autoreleasing *)error {
     self = [super init];
     if (self) {
         // Client token must be decoded first because the other values are retrieved from it
-        self.clientTokenParser = [self decodeClientToken:JSONString error:error];
+        self.clientTokenParser = [self decodeClientToken:clientTokenString error:error];
         self.authorizationFingerprint = [self.clientTokenParser stringForKey:BTClientTokenKeyAuthorizationFingerprint];
         self.configURL = [self.clientTokenParser URLForKey:BTClientTokenKeyConfigURL];
-        self.originalValue = JSONString;
+        self.originalValue = clientTokenString;
 
         if (![self validateClientToken:error]) {
             return nil;
@@ -71,6 +71,7 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
     copiedClientToken.authorizationFingerprint = [_authorizationFingerprint copy];
     copiedClientToken.configURL = [_configURL copy];
     copiedClientToken.clientTokenParser = [self.clientTokenParser copy];
+    copiedClientToken.originalValue = self.originalValue;
     return copiedClientToken;
 }
 
@@ -90,6 +91,7 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
     [coder encodeObject:self.configURL forKey:@"configURL"];
     [coder encodeObject:self.authorizationFingerprint forKey:@"authorizationFingerprint"];
     [coder encodeObject:self.clientTokenParser forKey:@"claims"];
+    [coder encodeObject:self.originalValue forKey:@"originalValue"];
 }
 
 - (id)initWithCoder:(NSCoder *)decoder {
@@ -98,6 +100,7 @@ NSString *const BTClientTokenKeyConfigURL = @"configUrl";
         self.configURL = [decoder decodeObjectForKey:@"configURL"];
         self.authorizationFingerprint = [decoder decodeObjectForKey:@"authorizationFingerprint"];
         self.clientTokenParser = [decoder decodeObjectForKey:@"claims"];
+        self.originalValue = [decoder decodeObjectForKey:@"originalValue"];
     }
     return self;
 }

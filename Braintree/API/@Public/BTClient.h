@@ -117,7 +117,7 @@ typedef void (^BTClientFailureBlock)(NSError *error);
 - (void)savePaypalPaymentMethodWithAuthCode:(NSString *)authCode
                    applicationCorrelationID:(NSString *)applicationCorrelationId
                                     success:(BTClientPaypalSuccessBlock)successBlock
-                                    failure:(BTClientFailureBlock)failureBlock DEPRECATED_ATTRIBUTE;
+                                    failure:(BTClientFailureBlock)failureBlock;
 
 /// Save a paypal payment method to Braintree without a PayPal App Correlation ID
 ///
