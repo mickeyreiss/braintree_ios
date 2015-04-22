@@ -156,6 +156,7 @@
                                              callbackURLScheme:[self returnURLScheme]];
     request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
 
+    
     [request performWithCompletionBlock:^(BOOL success, __unused PayPalOneTouchRequestTarget target, NSError *error) {
         if (success) {
             // TODO: Switch analytics based on target

@@ -71,17 +71,17 @@ extern NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgree
 #pragma mark PayPal
 
 // Returns the PayPal client id determined by Braintree control panel settings
-- (NSString *)btPayPal_clientId;
+- (NSString *)payPalClientId;
 
 // Returns a boolean if PayPal is enabled.
-- (BOOL)btPayPal_isPayPalEnabled;
+- (BOOL)payPalEnabled;
 
 // Returns the PayPal environment name
-- (NSString *)btPayPal_envirnoment;
+- (NSString *)payPalEnvironment;
 
-- (NSString *)btPayPal_merchantName;
-- (NSURL *)btPayPal_merchantUserAgreementURL;
-- (NSURL *)btPayPal_privacyPolicyURL;
+- (NSString *)payPalMerchantName;
+- (NSURL *)payPalMerchantUserAgreementURL;
+- (NSURL *)payPalPrivacyPolicyURL;
 
 #pragma mark Coinbase
 

@@ -51,9 +51,9 @@ NSString *const BTClientPayPalConfigurationError = @"The PayPal SDK could not be
 }
 
 - (NSString *)btPayPal_environment {
-    if ([self.configuration.payPalEnvirnoment isEqualToString:BTConfigurationPayPalEnvironmentLive]) {
+    if ([self.configuration.payPalEnvironment isEqualToString:BTConfigurationPayPalEnvironmentLive]) {
         return PayPalEnvironmentProduction;
-    } else if ([self.configuration.payPalEnvirnoment isEqualToString:BTConfigurationPayPalEnvironmentOffline]) {
+    } else if ([self.configuration.payPalEnvironment isEqualToString:BTConfigurationPayPalEnvironmentOffline]) {
         return PayPalEnvironmentMock;
     }
 
