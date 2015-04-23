@@ -104,7 +104,8 @@ typedef void (^BTClientFailureBlock)(NSError *error);
 #endif
 
 
-- (void)savePaypalAccount:(NSDictionary *)paypalOneTouchResponse
+- (void)savePaypalAccount:(NSDictionary *)paypalResponse
+ applicationCorrelationId:(NSString *)applicationCorrelationId
                   success:(BTClientPaypalSuccessBlock)successBlock
                   failure:(BTClientFailureBlock)failureBlock;
 
@@ -117,7 +118,7 @@ typedef void (^BTClientFailureBlock)(NSError *error);
 - (void)savePaypalPaymentMethodWithAuthCode:(NSString *)authCode
                    applicationCorrelationID:(NSString *)applicationCorrelationId
                                     success:(BTClientPaypalSuccessBlock)successBlock
-                                    failure:(BTClientFailureBlock)failureBlock;
+                                    failure:(BTClientFailureBlock)failureBlock DEPRECATED_MSG_ATTRIBUTE("Please use savePayPalAccount:success:failure:");
 
 /// Save a paypal payment method to Braintree without a PayPal App Correlation ID
 ///

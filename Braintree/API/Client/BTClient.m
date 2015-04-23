@@ -379,12 +379,18 @@
 }
 #endif
 
-- (void)savePaypalAccount:(NSDictionary *)paypalOneTouchResponse
+- (void)savePaypalAccount:(NSDictionary *)paypalResponse
+ applicationCorrelationId:(NSString *)correlationId
                   success:(BTClientPaypalSuccessBlock)successBlock
                   failure:(BTClientFailureBlock)failureBlock {
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"paypalAccounts"] = @[paypalOneTouchResponse];
-    parameters[@"authorization_fingerprint"] = self.clientToken.authorizationFingerprint;
+
+
+    // TODO: Pass entire paypalResponse to CAPI instead of parsing the code here
+    NSString *code = paypalResponse[@"response"][@"code"];
+    NSDictionary *parameters = @{ @"paypal_account": @{
+                            @"consent_code": code ?: NSNull.null,
+                            @"correlation_id": correlationId ?: NSNull.null },
+    @"authorization_fingerprint": self.clientToken.authorizationFingerprint };
     [self.clientApiHttp POST:@"v1/payment_methods/paypal_accounts"
                   parameters:parameters
                   completion:^(BTHTTPResponse *response, NSError *error) {

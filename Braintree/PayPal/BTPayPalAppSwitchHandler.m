@@ -65,29 +65,28 @@
                                  case PayPalOneTouchResultTypeSuccess:
                                      // TODO: switch analytics based on appswitch vs. browser switch
                                      [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.authorized"];
-
+                                     
                                      [self informDelegateWillCreatePayPalPaymentMethod];
 
-                                     NSString *code = result.response[@"response"][@"code"];
-                                     [self.client savePaypalPaymentMethodWithAuthCode:code
-                                                             applicationCorrelationID:[PayPalOneTouchCore clientMetadataID]
-                                                                              success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
-                                                                                  NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
-                                                                                  if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
-                                                                                      if (paypalPaymentMethod.email == nil) {
-                                                                                          paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
-                                                                                      }
-                                                                                      if (paypalPaymentMethod.description == nil) {
-                                                                                          paypalPaymentMethod.description = userDisplayStringFromAppSwitchResponse;
-                                                                                      }
-                                                                                  }
-
-                                                                                  [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
-                                                                                  [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
-                                                                              } failure:^(NSError *error) {
-                                                                                  [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.client-failure"];
-                                                                                  [self informDelegateDidFailWithError:error];
-                                                                              }];
+                                     NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
+                                     [self.client savePaypalAccount:result.response
+                                           applicationCorrelationId:[PayPalOneTouchCore clientMetadataID]
+                                                            success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
+                                                                if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
+                                                                    if (paypalPaymentMethod.email == nil) {
+                                                                        paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
+                                                                    }
+                                                                    if (paypalPaymentMethod.description == nil) {
+                                                                        paypalPaymentMethod.description = userDisplayStringFromAppSwitchResponse;
+                                                                    }
+                                                                }
+                                                                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
+                                                                [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
+                                                            } failure:^(NSError *error) {
+                                                                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.client-failure"];
+                                                                [self informDelegateDidFailWithError:error];
+                                                            }];
+                                     
                                      break;
                              }
                          }];
