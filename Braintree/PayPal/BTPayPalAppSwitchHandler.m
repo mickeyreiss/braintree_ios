@@ -23,19 +23,18 @@
     return instance;
 }
 
+#pragma mark BTAppSwitching
+
 - (BOOL)canHandleReturnURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication {
     if (self.client == nil || self.delegate == nil) {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.can-handle.invalid"];
         return NO;
     }
 
     if (![[url.scheme lowercaseString] isEqualToString:[self.returnURLScheme lowercaseString]]) {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.can-handle.different-scheme"];
         return NO;
     }
 
     if (![PayPalOneTouchCore canParseURL:url sourceApplication:sourceApplication]) {
-        [self.client postAnalyticsEvent:@"ios.paypal.appswitch.can-handle.paypal-cannot-handle"];
         return NO;
     }
     return YES;
@@ -44,120 +43,89 @@
 - (void)handleReturnURL:(NSURL *)url {
     [PayPalOneTouchCore parseResponseURL:url
                          completionBlock:^(PayPalOneTouchCoreResult *result) {
+                             BTClient *client = [self clientWithMetadataForResult:result];
+
+                             [self postAnalyticsEventWithClient:client forHandlingOneTouchResult:result];
+
                              switch (result.type) {
                                  case PayPalOneTouchResultTypeError: {
-                                     // TODO: switch analytics based on appswitch vs. browser switch
-                                     [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.error"];
                                      NSError *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain code:BTPayPalUnknownError userInfo:nil];
                                      [self informDelegateDidFailWithError:error];
                                      return;
                                  }
                                  case PayPalOneTouchResultTypeCancel:
-                                     // TODO: switch analytics based on appswitch vs. browser switch
-                                     [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel"];
                                      if (result.error) {
-                                         [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.cancel-error"];
                                          [[BTLogger sharedLogger] error:@"PayPal Wallet error: %@", result.error];
                                          return;
                                      }
                                      [self informDelegateDidCancel];
                                      return;
                                  case PayPalOneTouchResultTypeSuccess:
-                                     // TODO: switch analytics based on appswitch vs. browser switch
-                                     [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.authorized"];
-                                     
                                      [self informDelegateWillCreatePayPalPaymentMethod];
 
                                      NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
-                                     [self.client savePaypalAccount:result.response
-                                           applicationCorrelationId:[PayPalOneTouchCore clientMetadataID]
-                                                            success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
-                                                                if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
-                                                                    if (paypalPaymentMethod.email == nil) {
-                                                                        paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
-                                                                    }
-                                                                    if (paypalPaymentMethod.description == nil) {
-                                                                        paypalPaymentMethod.description = userDisplayStringFromAppSwitchResponse;
-                                                                    }
-                                                                }
-                                                                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.success"];
-                                                                [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
-                                                            } failure:^(NSError *error) {
-                                                                [self.client postAnalyticsEvent:@"ios.paypal.appswitch.handle.client-failure"];
-                                                                [self informDelegateDidFailWithError:error];
-                                                            }];
-                                     
+                                     [client savePaypalAccount:result.response
+                                      applicationCorrelationId:[PayPalOneTouchCore clientMetadataID]
+                                                       success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
+                                                           [self postAnalyticsEventForTokenizationSuccessWithClient:client];
+
+                                                           if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
+                                                               if (paypalPaymentMethod.email == nil) {
+                                                                   paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
+                                                               }
+                                                               if (paypalPaymentMethod.description == nil) {
+                                                                   paypalPaymentMethod.description = userDisplayStringFromAppSwitchResponse;
+                                                               }
+                                                           }
+                                                           [self informDelegateDidCreatePayPalPaymentMethod:paypalPaymentMethod];
+                                                       } failure:^(NSError *error) {
+                                                           [self postAnalyticsEventForTokenizationFailureWithClient:client];
+                                                           [self informDelegateDidFailWithError:error];
+                                                       }];
+
                                      break;
                              }
                          }];
 }
 
-- (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)theDelegate error:(NSError *__autoreleasing *)error {
+- (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)delegate error:(NSError *__autoreleasing *)error {
     client = [client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
-        metadata.source = BTClientMetadataSourcePayPalApp;
+        if ([PayPalOneTouchCore isWalletAppInstalled]) {
+            metadata.source = BTClientMetadataSourcePayPalApp;
+        } else {
+            metadata.source = BTClientMetadataSourcePayPalBrowser;
+        }
     }];
 
-    NSError *appSwitchError = [self appSwitchErrorForClient:client delegate:theDelegate];
-    if (appSwitchError) {
-        BOOL analyticsEventPosted = NO;
-        if ([appSwitchError.domain isEqualToString:BTAppSwitchErrorDomain]) {
-            analyticsEventPosted = YES;
-            switch (appSwitchError.code) {
-                case BTAppSwitchErrorDisabled:
-                    [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.app-switch-disabled"];
-                    break;
-                case BTAppSwitchErrorAppNotAvailable:
-                    [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.unavailable"];
-                    break;
-                case BTAppSwitchErrorIntegrationReturnURLScheme:
-                    [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.invalid.return-url-scheme"];
-                    break;
-                case BTAppSwitchErrorIntegrationInvalidParameters:
-                    [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.invalid.parameters"];
-                    break;
-                default:
-                    analyticsEventPosted = NO;
-                    break;
-            }
-        } else if ([appSwitchError.domain isEqualToString:BTBraintreePayPalErrorDomain] && appSwitchError.code == BTPayPalErrorPayPalDisabled) {
-            [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.disabled"];
-            analyticsEventPosted = YES;
-        }
-        if (!analyticsEventPosted) {
-            [client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.unrecognized-error"];
-        }
-        if (error) {
-            *error = appSwitchError;
+    if (delegate == nil) {
+        [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-delegate"];
+        if (error != NULL) {
+            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                         code:BTAppSwitchErrorIntegrationInvalidParameters
+                                     userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a delegate." }];
         }
         return NO;
     }
 
-    self.delegate = theDelegate;
-    self.client = client;
-
-    NSString *clientId;
-    if ([self.client.btPayPal_environment isEqualToString:PayPalEnvironmentMock] && client.configuration.payPalClientId == nil) {
-        clientId = @"mock-paypal-client-id";
-    } else {
-        clientId = client.configuration.payPalClientId;
+    if (![self verifyAppSwitchConfigurationForClient:client postingAnalytics:YES error:error]) {
+        return NO;
     }
+
+    self.delegate = delegate;
+    self.client = client;
 
     PayPalOneTouchAuthorizationRequest *request =
     [PayPalOneTouchAuthorizationRequest requestWithScopeValues:client.btPayPal_scopes
                                                     privacyURL:client.configuration.payPalPrivacyPolicyURL
                                                   agreementURL:client.configuration.payPalMerchantUserAgreementURL
-                                                      clientID:clientId
+                                                      clientID:[self payPalClientIdForClient:client]
                                                    environment:client.btPayPal_environment
                                              callbackURLScheme:[self returnURLScheme]];
     request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
 
-    [request performWithCompletionBlock:^(BOOL success, __unused PayPalOneTouchRequestTarget target, NSError *error) {
-        if (success) {
-            // TODO: Switch analytics based on target
-            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.success"];
-        } else {
-            // TODO: Switch analytics based on target
-            [self.client postAnalyticsEvent:@"ios.paypal.appswitch.initiate.error.failed"];
+    [request performWithCompletionBlock:^(BOOL success, PayPalOneTouchRequestTarget target, NSError *error) {
+        [self postAnalyticsEventWithClient:client forInitiatingOneTouchWithSuccess:success target:target];
+        if (!success) {
             [self informDelegateDidFailWithError:error];
         }
     }];
@@ -166,48 +134,173 @@
 }
 
 - (BOOL)appSwitchAvailableForClient:(BTClient *)client {
-    return [self appSwitchErrorForClient:client] == nil;
+    return [self verifyAppSwitchConfigurationForClient:client postingAnalytics:NO error:NULL];
 }
 
-- (NSError *)appSwitchErrorForClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)theDelegate {
-    if (theDelegate == nil) {
-        return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                   code:BTAppSwitchErrorIntegrationInvalidParameters
-                               userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a delegate." }];
-    }
-    return [self appSwitchErrorForClient:client];
-}
 
-- (NSError *)appSwitchErrorForClient:(BTClient *)client {
+#pragma mark Helpers
+
+- (BOOL)verifyAppSwitchConfigurationForClient:(BTClient *)client postingAnalytics:(BOOL)shouldPostAnalytics error:(NSError * __autoreleasing *)error {
     if (client == nil) {
-        return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                   code:BTAppSwitchErrorIntegrationInvalidParameters
-                               userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a BTClient." }];
+        if (error != NULL) {
+            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                         code:BTAppSwitchErrorIntegrationInvalidParameters
+                                     userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a BTClient." }];
+        }
+        return NO;
     }
 
     if (![client btPayPal_isPayPalEnabled]){
-        return [NSError errorWithDomain:BTBraintreePayPalErrorDomain
-                                   code:BTPayPalErrorPayPalDisabled
-                               userInfo:@{NSLocalizedDescriptionKey: @"PayPal is not enabled for this merchant."}];
+        if (shouldPostAnalytics) {
+            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
+        }
+        if (error != NULL) {
+            *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain
+                                         code:BTPayPalErrorPayPalDisabled
+                                     userInfo:@{NSLocalizedDescriptionKey: @"PayPal is not enabled for this merchant."}];
+        }
+        return NO;
     }
 
     if (self.returnURLScheme == nil) {
-        return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                   code:BTAppSwitchErrorIntegrationReturnURLScheme
-                               userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a returnURLScheme. See +[Braintree setReturnURLScheme:]." }];
+        if (shouldPostAnalytics) {
+            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-return-url-scheme"];
+        }
+        if (error != NULL) {
+            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                         code:BTAppSwitchErrorIntegrationReturnURLScheme
+                                     userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a returnURLScheme. See +[Braintree setReturnURLScheme:]." }];
+        }
+        return NO;
     }
 
     if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:self.returnURLScheme]) {
-        NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", self.returnURLScheme];
-        return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                   code:BTAppSwitchErrorAppNotAvailable
-                               userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
+        if (shouldPostAnalytics) {
+            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.invalid-return-url-scheme"];
+        }
+        if (error != NULL) {
+            NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", self.returnURLScheme];
+            return [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                       code:BTAppSwitchErrorIntegrationReturnURLScheme
+                                   userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
+        }
+        return NO;
     }
 
-
-    return nil;
+    return YES;
 }
 
+- (NSString *)payPalClientIdForClient:(BTClient *)client {
+    NSString *payPalClientId = client.configuration.payPalClientId;
+    if (payPalClientId != nil) {
+        return payPalClientId;
+    } else if ([client.btPayPal_environment isEqualToString:PayPalEnvironmentMock]) {
+        return @"mock-paypal-client-id";
+    } else {
+        return nil;
+    }
+}
+
+- (BTClient *)clientWithMetadataForResult:(PayPalOneTouchCoreResult *)result {
+    return [self.client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
+        switch (result.target) {
+            case PayPalOneTouchRequestTargetNone:
+            case PayPalOneTouchRequestTargetUnknown:
+                metadata.source = BTClientMetadataSourceUnknown;
+                break;
+            case PayPalOneTouchRequestTargetBrowser:
+                metadata.source = BTClientMetadataSourcePayPalBrowser;
+                break;
+            case PayPalOneTouchRequestTargetOnDeviceApplication:
+                metadata.source = BTClientMetadataSourcePayPalBrowser;
+                break;
+        }
+    }];
+}
+
+
+#pragma mark Analytics Helpers
+
+- (void)postAnalyticsEventWithClient:(BTClient *)client forInitiatingOneTouchWithSuccess:(BOOL)success target:(PayPalOneTouchRequestTarget)target {
+    if (success) {
+        switch (target) {
+            case PayPalOneTouchRequestTargetNone:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.none.initiate.started"];
+            case PayPalOneTouchRequestTargetUnknown:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.initiate.started"];
+            case PayPalOneTouchRequestTargetOnDeviceApplication:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.initiate.started"];
+            case PayPalOneTouchRequestTargetBrowser:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.initiate.started"];
+        }
+    } else {
+        switch (target) {
+            case PayPalOneTouchRequestTargetNone:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.none.initiate.failed"];
+            case PayPalOneTouchRequestTargetUnknown:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.initiate.failed"];
+            case PayPalOneTouchRequestTargetOnDeviceApplication:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.initiate.failed"];
+            case PayPalOneTouchRequestTargetBrowser:
+                return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.initiate.failed"];
+        }
+    }
+}
+
+- (void)postAnalyticsEventWithClient:(BTClient *)client forHandlingOneTouchResult:(PayPalOneTouchCoreResult *)result {
+    switch (result.type) {
+        case PayPalOneTouchResultTypeError:
+            switch (result.target) {
+                case PayPalOneTouchRequestTargetNone:
+                case PayPalOneTouchRequestTargetUnknown:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.failed"];
+                case PayPalOneTouchRequestTargetOnDeviceApplication:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.failed"];
+                case PayPalOneTouchRequestTargetBrowser:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.failed"];
+            }
+        case PayPalOneTouchResultTypeCancel:
+            if (result.error) {
+                switch (result.target) {
+                    case PayPalOneTouchRequestTargetNone:
+                    case PayPalOneTouchRequestTargetUnknown:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.canceled-with-error"];
+                    case PayPalOneTouchRequestTargetOnDeviceApplication:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.canceled-with-error"];
+                    case PayPalOneTouchRequestTargetBrowser:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.canceled-with-error"];
+                }
+            } else {
+                switch (result.target) {
+                    case PayPalOneTouchRequestTargetNone:
+                    case PayPalOneTouchRequestTargetUnknown:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.canceled"];
+                    case PayPalOneTouchRequestTargetOnDeviceApplication:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.canceled"];
+                    case PayPalOneTouchRequestTargetBrowser:
+                        return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.canceled"];
+                }
+            }
+        case PayPalOneTouchResultTypeSuccess:
+            switch (result.target) {
+                case PayPalOneTouchRequestTargetNone:
+                case PayPalOneTouchRequestTargetUnknown:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.unknown.succeeded"];
+                case PayPalOneTouchRequestTargetOnDeviceApplication:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.appswitch.succeeded"];
+                case PayPalOneTouchRequestTargetBrowser:
+                    return [client postAnalyticsEvent:@"ios.paypal-otc.webswitch.succeeded"];
+            }
+    }
+}
+
+- (void)postAnalyticsEventForTokenizationSuccessWithClient:(BTClient *)client {
+    return [client postAnalyticsEvent:@"ios.paypal-otc.tokenize.succeeded"];
+}
+
+- (void)postAnalyticsEventForTokenizationFailureWithClient:(BTClient *)client {
+    return [client postAnalyticsEvent:@"ios.paypal-otc.tokenize.failed"];
+}
 
 #pragma mark Delegate Method Invocations
 
