@@ -379,6 +379,34 @@
 }
 #endif
 
+- (void)createPayPalPaymentResourceWithAmount:(NSDecimalNumber *)amount
+                                  redirectUri:(NSString *)redirectUri
+                                    cancelUri:(NSString *)cancelUri
+                     applicationCorrelationId:(NSString *)correlationId
+                                      success:(void (^)(id response))successBlock
+                                     failaure:(BTClientFailureBlock)failureBlock {
+    // TODO: Determine currency better
+    NSDictionary *parameters = @{ @"authorization_fingerprint": self.clientToken.authorizationFingerprint,
+                                  @"amount": [amount stringValue],
+                                  @"currency_iso_code": @"USD",
+                                  @"return_url": redirectUri,
+                                  @"cancel_url": cancelUri,
+                                  @"correlation_id": correlationId };
+    [self.clientApiHttp POST:@"v1/paypal_hermes/create_payment_resource"
+                  parameters:parameters
+                  completion:^(BTHTTPResponse *response, NSError *error) {
+                      if (response.isSuccess) {
+                          if (successBlock) {
+                              successBlock(response);
+                          }
+                      } else {
+                          if (failureBlock) {
+                              failureBlock(error);
+                          }
+                      }
+                  }];
+}
+
 - (void)savePaypalAccount:(NSDictionary *)paypalResponse
  applicationCorrelationId:(NSString *)correlationId
                   success:(BTClientPaypalSuccessBlock)successBlock

@@ -24,6 +24,14 @@ typedef void (^BTClientThreeDSecureLookupSuccessBlock)(BTThreeDSecureLookupResul
                            success:(BTClientThreeDSecureLookupSuccessBlock)successBlock
                            failure:(BTClientFailureBlock)failureBlock;
 
+- (void)createPayPalPaymentResourceWithAmount:(NSDecimalNumber *)amount
+                                  redirectUri:(NSString *)redirectUri
+                                    cancelUri:(NSString *)cancelUri
+                     applicationCorrelationId:(NSString *)correlationId
+                                      success:(void (^)(id response))successBlock
+                                     failaure:(BTClientFailureBlock)failureBlock;
+
+
 @property (nonatomic, copy, readonly) BTClientMetadata *metadata;
 
 ///  Copy of the instance, but with different metadata
