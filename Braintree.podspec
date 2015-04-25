@@ -56,7 +56,6 @@ Pod::Spec.new do |s|
     s.vendored_library = "Braintree/PayPal/PayPalOneTouchCore/libPayPalOneTouchCore.a"
     s.xcconfig = { "OTHER_LDFLAGS" => "-ObjC -lc++" }
     s.dependency "Braintree/API"
-    s.dependency "Braintree/UI"
   end
 
   s.subspec "Venmo" do |s|
