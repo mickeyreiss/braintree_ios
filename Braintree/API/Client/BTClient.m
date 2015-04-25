@@ -408,7 +408,7 @@
 }
 
 - (void)savePaypalAccount:(NSDictionary *)paypalResponse
- applicationCorrelationId:(NSString *)correlationId
+ applicationCorrelationID:(NSString *)correlationId
                   success:(BTClientPaypalSuccessBlock)successBlock
                   failure:(BTClientFailureBlock)failureBlock {
 

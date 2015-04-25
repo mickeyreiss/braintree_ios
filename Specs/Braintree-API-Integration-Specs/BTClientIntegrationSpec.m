@@ -800,27 +800,62 @@ sharedExamplesFor(@"a BTClient", ^(NSDictionary *data) {
         });
         
         it(@"can save a PayPal payment method based on an auth code", ^{
-            XCTestExpectation *expectation = [self expectationWithDescription:@"Save payment method"];
-            [testClient savePaypalPaymentMethodWithAuthCode:@"testAuthCode"
-                                   applicationCorrelationID:@"testCorrelationId"
-                                                    success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
-                                                        expect(payPalPaymentMethod.nonce).to.beANonce();
-                                                        expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
-                                                        [expectation fulfill];
-                                                    } failure:nil];
+            XCTestExpectation *expectation = [self expectationWithDescription:@"save PayPal account"];
+            [testClient savePaypalAccount:@{ @"client": @{ @"some_fields": @"some_values" },
+                                             @"response": @{ @"code": @"testAuthCode" },
+                                             @"response_type": @"authorization_code",
+                                             }
+                 applicationCorrelationID:@"testCorrelationId"
+                                  success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
+                                      expect(payPalPaymentMethod.nonce).to.beANonce();
+                                      expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
+                                      [expectation fulfill];
+                                  } failure:nil];
             [self waitForExpectationsWithTimeout:10 handler:nil];
         });
         
         it(@"can save a PayPal payment method based on an auth code without a correlation id", ^{
-            XCTestExpectation *expectation = [self expectationWithDescription:@"Save payment method"];
-            [testClient savePaypalPaymentMethodWithAuthCode:@"testAuthCode"
-                                   applicationCorrelationID:nil
-                                                    success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
-                                                        expect(payPalPaymentMethod.nonce).to.beANonce();
-                                                        expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
-                                                        [expectation fulfill];
-                                                    } failure:nil];
+            XCTestExpectation *expectation = [self expectationWithDescription:@"save PayPal account"];
+            [testClient savePaypalAccount:@{ @"client": @{ @"some_fields": @"some_values" },
+                                             @"response": @{ @"code": @"testAuthCode" },
+                                             @"response_type": @"authorization_code",
+                                             }
+                 applicationCorrelationID:nil
+                                  success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
+                                      expect(payPalPaymentMethod.nonce).to.beANonce();
+                                      expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
+                                      [expectation fulfill];
+                                  } failure:nil];
             [self waitForExpectationsWithTimeout:10 handler:nil];
+        });
+        
+        context(@"using deprecated savePayPal method", ^{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+            it(@"can save a PayPal payment method based on an auth code", ^{
+                waitUntil(^(DoneCallback done){
+                    [testClient savePaypalPaymentMethodWithAuthCode:@"testAuthCode"
+                                           applicationCorrelationID:@"testCorrelationId"
+                                                            success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
+                                                                expect(payPalPaymentMethod.nonce).to.beANonce();
+                                                                expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
+                                                                done();
+                                                            } failure:nil];
+                });
+            });
+            
+            it(@"can save a PayPal payment method based on an auth code without a correlation id", ^{
+                waitUntil(^(DoneCallback done){
+                    [testClient savePaypalPaymentMethodWithAuthCode:@"testAuthCode"
+                                           applicationCorrelationID:nil
+                                                            success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
+                                                                expect(payPalPaymentMethod.nonce).to.beANonce();
+                                                                expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
+                                                                done();
+                                                            } failure:nil];
+                });
+            });
+#pragma clang diagnostic pop
         });
     });
     
@@ -1119,12 +1154,13 @@ sharedExamplesFor(@"a BTClient", ^(NSDictionary *data) {
             
             beforeEach(^{
                 XCTestExpectation *expectation = [self expectationWithDescription:@"Fetch client"];
-                [testThreeDSecureClient savePaypalPaymentMethodWithAuthCode:@"fake-paypal-auth-code"
-                                                   applicationCorrelationID:nil
-                                                                    success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
-                                                                        nonce = paypalPaymentMethod.nonce;
-                                                                        [expectation fulfill];
-                                                                    } failure:nil];
+                [testThreeDSecureClient savePaypalAccount:@{ @"response_type": @"authorization_code",
+                                                             @"response": @{ @"code": @"fake-paypal-auth-code" } }
+                                 applicationCorrelationID:nil
+                                                  success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
+                                                      nonce = paypalPaymentMethod.nonce;
+                                                      [expectation fulfill];
+                                                  } failure:nil];
                 [self waitForExpectationsWithTimeout:10 handler:nil];
             });
             
@@ -1294,17 +1330,17 @@ SharedExamplesEnd
 SpecBegin(DeprecatedBTClient)
 
 describe(@"shared initialization behavior", ^{
-  NSDictionary* data = @{@"asyncClient": @NO};
-  itShouldBehaveLike(@"a BTClient", data);
+    NSDictionary* data = @{@"asyncClient": @NO};
+    itShouldBehaveLike(@"a BTClient", data);
 });
-    
+
 SpecEnd
 
 SpecBegin(AsyncBTClient)
 
 describe(@"shared initialization behavior", ^{
-  NSDictionary* data = @{@"asyncClient": @YES};
-  itShouldBehaveLike(@"a BTClient", data);
+    NSDictionary* data = @{@"asyncClient": @YES};
+    itShouldBehaveLike(@"a BTClient", data);
 });
 
 SpecEnd

@@ -65,7 +65,7 @@
 
                                      NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
                                      [client savePaypalAccount:result.response
-                                      applicationCorrelationId:[PayPalOneTouchCore clientMetadataID]
+                                      applicationCorrelationID:[PayPalOneTouchCore clientMetadataID]
                                                        success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
                                                            [self postAnalyticsEventForTokenizationSuccessWithClient:client];
 
