@@ -16,6 +16,9 @@
 #import "BTClientPaymentMethodValueTransformer.h"
 #import "BTCoinbasePaymentMethod_Internal.h"
 
+NSString *const BTClientPayPalMobileEnvironmentName = @"Braintree";
+NSString *const BTClientPayPalConfigurationError = @"The PayPal SDK could not be initialized. Perhaps client token did not contain a valid PayPal configuration.";
+
 @interface BTClient ()
 - (void)setMetadata:(BTClientMetadata *)metadata;
 @end

@@ -1,7 +1,5 @@
 #import "Braintree_Internal.h"
 
-#import "BTClient.h"
-#import "BTClient+BTPayPal.h"
 #import "BTClient_Internal.h"
 #import "BTLogger_Internal.h"
 
@@ -169,7 +167,7 @@
                             success:nil
                             failure:nil];
 
-    if (!self.client.btPayPal_isPayPalEnabled){
+    if (!self.client.configuration.payPalEnabled){
         return nil;
     }
 

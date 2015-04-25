@@ -7,7 +7,6 @@
 #import "BTVenmoAppSwitchHandler.h"
 
 #import "BTPayPalAppSwitchHandler.h"
-#import "BTClient+BTPayPal.h"
 #import "BTPaymentApplePayProvider.h"
 #import "BTLogger_Internal.h"
 #import "BTCoinbase.h"
@@ -65,7 +64,7 @@
         case BTPaymentProviderTypeApplePay:
             return [self.applePayPaymentProvider canAuthorizeApplePayPayment];
         case BTPaymentProviderTypePayPal:
-            return [self.client btPayPal_isPayPalEnabled];
+            return [[BTPayPalAppSwitchHandler sharedHandler] appSwitchAvailableForClient:self.client];
         case BTPaymentProviderTypeVenmo:
             return [[BTVenmoAppSwitchHandler sharedHandler] appSwitchAvailableForClient:self.client];
         case BTPaymentProviderTypeCoinbase:

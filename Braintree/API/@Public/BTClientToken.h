@@ -4,6 +4,12 @@
 @class BTAPIResponseParser;
 
 extern NSString *const BTClientTokenKeyVersion;
+
+typedef NS_ENUM(NSInteger, BTClientPayPalEnvironment) {
+    BTPayPalEnvironmentLive = 1,
+    BTPayPalEnvironmentMock = 2,
+};
+
 extern NSString *const BTClientTokenKeyAuthorizationFingerprint;
 extern NSString *const BTClientTokenKeyConfigURL;
 

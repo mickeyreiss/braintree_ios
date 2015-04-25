@@ -1,7 +1,6 @@
 #import "BTData.h"
 #import "DeviceCollectorSDK.h"
 #import "PayPalOneTouchCore.h"
-#import "BTClient+BTPayPal.h"
 #import "BTLogger_Internal.h"
 
 static NSString *BTDataSharedMerchantId = @"600000";
@@ -108,9 +107,10 @@ static NSString *BTDataSharedMerchantId = @"600000";
 
     NSMutableDictionary *dataDictionary = [NSMutableDictionary dictionaryWithDictionary:@{ @"device_session_id": deviceSessionId,
                                                                                            @"fraud_merchant_id": self.fraudMerchantId}];
-    if (self.client.btPayPal_applicationCorrelationId) {
-        dataDictionary[@"correlation_id"] = self.client.btPayPal_applicationCorrelationId;
-    }
+    // TODO: Add PayPal back into BTData
+//    if (self.client.btPayPal_applicationCorrelationId) {
+//        dataDictionary[@"correlation_id"] = self.client.btPayPal_applicationCorrelationId;
+//    }
 
     NSError *error;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dataDictionary

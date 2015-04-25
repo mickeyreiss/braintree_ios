@@ -17,6 +17,7 @@ NSString *BraintreeDemoAppDelegatePaymentsURLScheme = @"com.braintreepayments.Br
     if ([[[NSProcessInfo processInfo] arguments] containsObject:@"-disableUpdateCheck"]) {
       [[BITHockeyManager sharedHockeyManager] updateManager].checkForUpdateOnLaunch = NO;
     }
+      [[BITHockeyManager sharedHockeyManager] updateManager].checkForUpdateOnLaunch = NO;
     [self setupAppearance];
     [self registerDefaultsFromSettings];
 

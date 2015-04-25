@@ -10,6 +10,8 @@
 #import "BTClientCardRequest.h"
 
 @class BTClient, BTCoinbasePaymentMethod;
+// TODO: Remove this constant?
+extern NSString *const BTClientPayPalMobileEnvironmentName;
 
 #pragma mark Types
 
@@ -169,6 +171,7 @@ typedef void (^BTClientFailureBlock)(NSError *error);
                    failure:(BTClientFailureBlock)failureBlock;
 
 - (void)postAnalyticsEvent:(NSString *)eventKind;
+
 
 #pragma mark - Library Metadata
 
