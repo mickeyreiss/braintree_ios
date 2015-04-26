@@ -19,6 +19,17 @@ describe(@"PayPal One Touch Core", ^{
             it(@"fails to switch if the returnUrlScheme is not valid, returning the error to the delegate", ^{
             });
 
+            xdescribe(@"scopes", ^{
+                it(@"includes email and future payments", ^{
+                    NSString *clientTokenString = clientTokenStringFromNSDictionary(mutableClaims);
+                    BTClient *client = [[BTClient alloc] initWithClientToken:clientTokenString];
+                    
+                    NSSet *scopes = [client btPayPal_scopes];
+                    expect(scopes).to.contain(kPayPalOAuth2ScopeEmail);
+                    expect(scopes).to.contain(kPayPalOAuth2ScopeFuturePayments);
+                });
+            });
+
             describe(@"analytics", ^{
                 it(@"posts an analytics event for a successful app switch to the PayPal app", ^{
                 });

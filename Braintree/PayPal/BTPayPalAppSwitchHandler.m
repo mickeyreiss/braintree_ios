@@ -48,12 +48,12 @@
     [BTPayPalDriver handleAppSwitchReturnURL:url];
 }
 
-- (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)delegate error:(NSError *__autoreleasing *)error {
+- (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)delegate error:(NSError *__autoreleasing *)errorPtr {
 
     if (delegate == nil) {
         [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-delegate"];
-        if (error != NULL) {
-            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
+        if (errorPtr != NULL) {
+            *errorPtr = [NSError errorWithDomain:BTAppSwitchErrorDomain
                                          code:BTAppSwitchErrorIntegrationInvalidParameters
                                      userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a delegate." }];
         }
@@ -69,17 +69,33 @@
 
     // Capture return in block in case there is a synchronous failure
     __block BOOL returnValue = YES;
+    __block BOOL didReturn = NO;
 
     [payPalDriver startAuthorizationWithCompletion:^(BTPayPalPaymentMethod * __nullable paymentMethod, NSError * __nullable error) {
-        if (paymentMethod) {
-            [self informDelegateDidCreatePayPalPaymentMethod:paymentMethod];
-        } else if (error) {
-            returnValue = NO;
-            [self informDelegateDidFailWithError:error];
+        if (didReturn) {
+            if (paymentMethod) {
+                [self informDelegateDidCreatePayPalPaymentMethod:paymentMethod];
+            } else if (error) {
+                [self informDelegateDidFailWithError:error];
+            } else {
+                [self informDelegateDidCancel];
+            }
         } else {
-            [self informDelegateDidCancel];
+            returnValue = NO;
+            if (errorPtr != NULL) {
+                *errorPtr = error;
+            }
         }
     }];
+
+    // For backwards compatibility, set a default error message, in case PayPal driver fails without a specific error
+    if (returnValue == NO && errorPtr != NULL && *errorPtr == NULL) {
+        *errorPtr = [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                        code:BTAppSwitchErrorFailed
+                                    userInfo:@{NSLocalizedDescriptionKey: @"Failed to initiate PayPal app switch."}];
+    }
+
+    didReturn = YES;
 
     return returnValue;
 }

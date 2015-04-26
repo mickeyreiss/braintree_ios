@@ -2,9 +2,8 @@
 #import "BTData.h"
 #import "BTClientSpecHelper.h"
 #import "BTTestClientTokenFactory.h"
-#import "BTClientToken.h"
 #import "BTConfiguration.h"
-#import "BTClient+BTPayPal.h"
+#import "PayPalOneTouchCore.h"
 
 @interface TestDataDelegate : NSObject <BTDataDelegate>
 @property (nonatomic, strong) NSError *error;
@@ -162,9 +161,8 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
 
             BTClient *client = [BTClientSpecHelper asyncClientForTestCase:self withOverrides:@{ BTConfigurationKeyPayPalEnabled: @NO, BTConfigurationKeyPayPal: [NSNull null] }];
 
-            id stubClient = [OCMockObject partialMockForObject:client];
-            [[[stubClient stub] andReturnValue:@NO] btPayPal_preparePayPalMobileWithError:NULL];
-            [[[stubClient stub] andReturn:nil] btPayPal_applicationCorrelationId];
+            id stubClient = [OCMockObject mockForClass:[PayPalOneTouchCore class]];
+            [[[stubClient stub] classMethod] clientMetadataID];
 
             BTData *data = [[BTData alloc] initWithClient:client environment:env];
             [data setFraudMerchantId:@"600000"];
