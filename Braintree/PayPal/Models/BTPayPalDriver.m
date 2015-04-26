@@ -107,12 +107,12 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
     PayPalOneTouchAuthorizationRequest *request =
     [PayPalOneTouchAuthorizationRequest requestWithScopeValues:self.OAuth2Scopes
-                                                    privacyURL:client.clientToken.btPayPal_privacyPolicyURL
-                                                  agreementURL:client.clientToken.btPayPal_merchantUserAgreementURL
+                                                    privacyURL:client.configuration.payPalPrivacyPolicyURL
+                                                  agreementURL:client.configuration.payPalMerchantUserAgreementURL
                                                       clientID:[self paypalClientIdForClient:client]
                                                    environment:[self payPalEnvironmentForClient:client]
                                              callbackURLScheme:[self returnURLScheme]];
-    request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalClientTokenString };
+    request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
 
     [request performWithCompletionBlock:^(BOOL success, PayPalOneTouchRequestTarget target, NSError *error) {
         [self postAnalyticsEventWithClient:client forInitiatingOneTouchWithSuccess:success target:target];
@@ -178,7 +178,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
         return NO;
     }
 
-    if (!client.clientToken.btPayPal_isPayPalEnabled) {
+    if (!client.configuration.payPalEnabled) {
         if (shouldPostAnalytics) {
             [client postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
         }
@@ -219,7 +219,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 }
 
 - (NSString *)payPalEnvironmentForClient:(BTClient *)client {
-    NSString *btPayPalEnvironmentName = client.clientToken.payPalEnvironment;
+    NSString *btPayPalEnvironmentName = client.configuration.payPalEnvironment;
     if ([btPayPalEnvironmentName isEqualToString:@"offline"]) {
         return @"mock";
     } else {
@@ -228,10 +228,10 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 }
 
 - (NSString *)paypalClientIdForClient:(BTClient *)client {
-    if ([client.clientToken.payPalEnvironment isEqualToString:@"offline"] && client.clientToken.payPalClientId == nil) {
+    if ([client.configuration.payPalEnvironment isEqualToString:@"offline"] && client.configuration.payPalClientId == nil) {
         return @"mock-paypal-client-id";
     } else {
-        return client.clientToken.payPalClientId;
+        return client.configuration.payPalClientId;
     }
 }
 

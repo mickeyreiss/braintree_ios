@@ -167,7 +167,7 @@
                             success:nil
                             failure:nil];
 
-    if (!self.client.configuration.payPalEnabled){
+    if (!self.client.configuration.payPalEnabled) {
         return nil;
     }
 
