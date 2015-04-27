@@ -6,7 +6,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class BTPayPalCheckout;
-@protocol BTPayPalDelegate;
+@protocol BTPayPalDriverDelegate;
 
 /// The BTPayPal enables you to obtain permission to charge your customers' PayPal accounts.
 ///
@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// On success, you will receive a paymentMethod, on failure, an error, on user cancelation, you will receive nil for both parameters.
 ///
-/// Note that during the app switch authorization, the user may switch back to your app manually. In this case, the caller will not receive a cancelation via the completionBlock. Rather, it is the caller's responsibility to observe UIApplicationDidBecomeActiveNotificaiton if necessary.
+/// Note that during the app switch authorization, the user may switch back to your app manually. In this case, the caller will not receive a cancelation via the completionBlock. Rather, it is the caller's responsibility to observe `UIApplicationDidBecomeActiveNotification` and `UIApplicationWillResignActiveNotification` using `NSNotificationCenter` if necessary.
 ///
 /// @param completionBlock This completion will be invoked exactly once when authorization is complete or an error occurs.
 - (void)startAuthorizationWithCompletion:(void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
@@ -55,9 +55,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param completionBlock This completion will be invoked when authorization is complete.
 - (void)startCheckout:(BTPayPalCheckout *)checkout completion:(void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
 
+
 #pragma mark - App Switch
 
-
+/// Set the URL scheme that will be used to return to this app
+///
+/// This is needed for instructing the PayPal authentication on how to return to your app.
+///
+/// Your URL scheme must be registered in your info.plist, and it must start with your app's bundle identifier.
+///
+/// @param scheme a URL scheme
 - (void)setReturnURLScheme:(NSString *)scheme;
 
 
@@ -70,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - UX Helpers
 
 /// An optional delegate for receiving notifications about the lifecycle of a PayPal app switch for updating your UI
-@property (nonatomic, weak, nullable) id<BTPayPalDelegate> delegate;
+@property (nonatomic, weak, nullable) id<BTPayPalDriverDelegate> delegate;
 
 /// Check whether or not it is possible to pay with PayPal (e.g. is your merchant account enabled in the Braintree control panel).
 ///
@@ -107,25 +114,46 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-/// Designates the state in the lifecycle of a PayPal login experience
-typedef NS_ENUM(NSInteger, BTPayPalState){
-    /// Performing asynchronous work before an app switch will take place
-    BTPayPalStatePreparingForAppSwitch = 1,
-    /// App switch to the PayPal app or Safari is in progress
-    BTPayPalStateSwitching = 2,
-    /// Performing asynchronous work based on data returned from PayPal
-    BTPayPalStateProcessingAppSwitchReturn = 3,
-    /// Login and tokenization are complete, the completion block has been called
-    BTPayPalStateCompleted = 4,
+/// Specifies the destination of the PayPal app switch
+typedef NS_ENUM(NSInteger, BTPayPalDriverAppSwitchTarget){
+    /// Login or One Touch will take place in the PayPal app
+    BTPayPalDriverAppSwitchTargetPayPalApp,
+    /// Login or One Touch will take place in the browser on PayPal's website
+    BTPayPalDriverAppSwitchTargetBrowser,
 };
 
-@protocol BTPayPalDelegate <NSObject>
+/// A delegate protocol for sending lifecycle updates as PayPal login via app switch takes place
+@protocol BTPayPalDriverDelegate <NSObject>
 
-/// If BTPayPal has a delegate associated with it, it will dispatch this message on the main queue each time the app switch authentication lifecycle state progresses.
+@optional
+
+/// Delegates receive this message when the PayPal driver is preparing to perform an app switch.
 ///
-/// @param payPal The instance of BTPayPal sending the message
-/// @param state  The current state
-- (void)payPal:(BTPayPalDriver *)payPal didChangeState:(BTPayPalState)state;
+/// This transition is usually instantaneous; however, you may use this hook to present a loading
+/// indication to the user.
+///
+/// @param payPalDriver The BTPayPalDriver instance performing user authentication
+- (void)payPalDriverWillPerformAppSwitch:(BTPayPalDriver *)payPalDriver;
+
+/// Delegates receive this message when the PayPal driver has successfully performed an app switch.
+///
+/// You may use this hook to prepare your UI for app switch return. Keep in mind that
+/// users may manually switch back to your app via the iOS task manager.
+///
+/// @note You may also hook into the app switch lifecycle via UIApplicationWillResignActiveNotification.
+///
+/// @param payPalDriver The BTPayPalDriver instance performing user authentication
+/// @param target       The destination that was actually used for this app switch
+- (void)payPalDriver:(BTPayPalDriver *)payPalDriver didPerformAppSwitchToTarget:(BTPayPalDriverAppSwitchTarget)target;
+
+/// Delegates receive this message when control returns to BTPayPalDriver upon app switch return
+///
+/// This usually gets invoked after handleAppSwitchReturnURL: is called in your UIApplicationDelegate.
+///
+/// @note You may also hook into the app switch lifecycle via UIApplicationWillResignActiveNotification.
+///
+/// @param payPalDriver The instance of BTPayPalDriver handling the app switch return.
+- (void)payPalDriverWillProcessAppSwitchResult:(BTPayPalDriver *)payPalDriver;
 
 @end
 

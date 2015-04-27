@@ -10,7 +10,7 @@
 
 #import "BTPayPalDriver.h"
 
-@interface BTPayPalAppSwitchHandler () <BTPayPalDelegate>
+@interface BTPayPalAppSwitchHandler () <BTPayPalDriverDelegate>
 @end
 
 @implementation BTPayPalAppSwitchHandler
@@ -109,11 +109,10 @@
 
 #pragma mark BTPayPalDelegate
 
-- (void)payPal:(__unused BTPayPalDriver * __nonnull)payPal didChangeState:(BTPayPalState)state {
-    if (state == BTPayPalStateProcessingAppSwitchReturn) {
-        [self informDelegateWillCreatePayPalPaymentMethod];
-    }
+- (void)payPalDriverWillProcessAppSwitchResult:(__unused BTPayPalDriver * __nonnull)payPalDriver {
+    [self informDelegateWillCreatePayPalPaymentMethod];
 }
+
 
 #pragma mark Delegate Method Invocations
 

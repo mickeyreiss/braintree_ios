@@ -30,8 +30,6 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 #pragma mark - PayPal Lifecycle
 
 - (void)startAuthorizationWithCompletion:(void (^ __nonnull)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
-    [self informDelegateDidChangeState:BTPayPalStatePreparingForAppSwitch];
-
     BTClient *client = [self.client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
         if ([PayPalOneTouchCore isWalletAppInstalled]) {
             metadata.source = BTClientMetadataSourcePayPalApp;
@@ -45,12 +43,11 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
         if (completionBlock) {
             completionBlock(nil, error);
         }
-        [self informDelegateDidChangeState:BTPayPalStateCompleted];
         return;
     }
 
     BTPayPalHandleURLContinuation = ^(NSURL *url){
-        [self informDelegateDidChangeState:BTPayPalStateProcessingAppSwitchReturn];
+        [self informDelegateWillProcessAppSwitchResult];
 
         [PayPalOneTouchCore parseResponseURL:url
                              completionBlock:^(PayPalOneTouchCoreResult *result) {
@@ -101,7 +98,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
                                      }
                                          break;
                                  }
-                                 [self informDelegateDidChangeState:BTPayPalStateCompleted];
+                                 BTPayPalHandleURLContinuation = nil;
                              }];
     };
 
@@ -114,15 +111,15 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
                                              callbackURLScheme:[self returnURLScheme]];
     request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
 
+    [self informDelegateWillPerformAppSwitch];
     [request performWithCompletionBlock:^(BOOL success, PayPalOneTouchRequestTarget target, NSError *error) {
         [self postAnalyticsEventWithClient:client forInitiatingOneTouchWithSuccess:success target:target];
         if (success) {
-            [self informDelegateDidChangeState:BTPayPalStateSwitching];
+            [self informDelegateDidPerformAppSwitchToTarget:target];
         } else {
             if (completionBlock) {
                 completionBlock(nil, error);
             }
-            [self informDelegateDidChangeState:BTPayPalStateCompleted];
         }
     }];
 }
@@ -159,9 +156,32 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
 #pragma mark - Delegate Informers
 
-- (void)informDelegateDidChangeState:(BTPayPalState)state {
-    if ([self.delegate respondsToSelector:@selector(payPal:didChangeState:)]) {
-        [self.delegate payPal:self didChangeState:state];
+- (void)informDelegateWillPerformAppSwitch {
+    if ([self.delegate respondsToSelector:@selector(payPalDriverWillPerformAppSwitch:)]) {
+        [self.delegate payPalDriverWillPerformAppSwitch:self];
+    }
+}
+
+- (void)informDelegateDidPerformAppSwitchToTarget:(PayPalOneTouchRequestTarget)target {
+    if ([self.delegate respondsToSelector:@selector(payPalDriver:didPerformAppSwitchToTarget:)]) {
+        switch (target) {
+            case PayPalOneTouchRequestTargetBrowser:
+                [self.delegate payPalDriver:self didPerformAppSwitchToTarget:BTPayPalDriverAppSwitchTargetBrowser];
+                break;
+            case PayPalOneTouchRequestTargetOnDeviceApplication:
+                [self.delegate payPalDriver:self didPerformAppSwitchToTarget:BTPayPalDriverAppSwitchTargetPayPalApp];
+                break;
+            default:
+                // Should never happen.
+                break;
+        }
+    }
+
+}
+
+- (void)informDelegateWillProcessAppSwitchResult {
+    if ([self.delegate respondsToSelector:@selector(payPalDriverWillProcessAppSwitchResult:)]) {
+        [self.delegate payPalDriverWillProcessAppSwitchResult:self];
     }
 }
 
