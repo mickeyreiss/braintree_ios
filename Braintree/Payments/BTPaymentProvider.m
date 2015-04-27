@@ -135,7 +135,7 @@
         if (error != nil) {
             userInfo[NSUnderlyingErrorKey] = error;
         }
-        [NSError errorWithDomain:BTPaymentProviderErrorDomain code:BTPaymentProviderErrorUnknown userInfo:userInfo];
+        NSError *error = [NSError errorWithDomain:BTPaymentProviderErrorDomain code:BTPaymentProviderErrorUnknown userInfo:userInfo];
         [self informDelegateDidFailWithError:error andPostAnalyticsEvent:YES];
     }
 }

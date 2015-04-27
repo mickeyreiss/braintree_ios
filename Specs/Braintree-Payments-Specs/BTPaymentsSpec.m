@@ -88,6 +88,9 @@ afterEach(^{
     [client verify];
     [client stopMocking];
 
+    [configuration verify];
+    [configuration stopMocking];
+
     [delegate verify];
     [delegate stopMocking];
 });
@@ -206,22 +209,6 @@ describe(@"createPaymentMethod:", ^{
                 provider.delegate = delegate;
                 [(id<BTPaymentMethodCreationDelegate>)provider paymentMethodCreatorWillProcess:provider];
                 expect([provider status]).to.equal(BTPaymentProviderStatusProcessing);
-            });
-        });
-
-        context(@"and app switch is unavailable", ^{
-
-            beforeEach(^{
-                [[[payPalAppSwitchHandler stub] andReturnValue:@NO] initiateAppSwitchWithClient:OCMOCK_ANY delegate:OCMOCK_ANY error:(NSError *__autoreleasing *)[OCMArg anyPointer]];
-            });
-
-            it(@"returns YES and invokes view controller delegate method", ^{
-                [[delegate expect] paymentMethodCreator:provider requestsPresentationOfViewController:[OCMArg checkWithBlock:^BOOL(id obj) {
-                    return [obj isKindOfClass:[UIViewController class]];
-                }]];
-                provider.delegate = delegate;
-
-                [provider createPaymentMethod:BTPaymentProviderTypePayPal];
             });
         });
     });
