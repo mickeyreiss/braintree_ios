@@ -228,9 +228,9 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
         }
         if (error != NULL) {
             NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", self.returnURLScheme];
-            return [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                       code:BTAppSwitchErrorIntegrationReturnURLScheme
-                                   userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
+            *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
+                                         code:BTAppSwitchErrorIntegrationReturnURLScheme
+                                     userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
         }
         return NO;
     }
