@@ -93,24 +93,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// @return YES iff the PayPal app is available on this device
 + (BOOL)isAppInstalled;
 
-
-#pragma mark - Fraud Data
-
-/// Collect data for PayPal fraud detection.
-///
-/// This occurs automatically when you use startAuthorizationWithCompletion: or startCheckout:completion:.
-///
-/// You should call this method immediatley before creating a transaction with a PayPal account
-/// stored in the vault. This will provide PayPal with the most recent possible fraud data without any
-/// impact on the user experience. By doing this, your vault transactions are less likely to be declined.
-///
-/// When you call this method, you must pass the returned data to your server, where it must be passed
-/// into the transaction creation call.
-///
-/// @return A fresh application correlation ID
-// TODO: What should this be called?
-- (NSString *)applicationCorrelationId;
-
 @end
 
 

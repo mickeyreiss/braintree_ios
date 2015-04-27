@@ -147,13 +147,6 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 }
 
 
-#pragma mark - Fraud Data
-
-- (NSString * __nonnull)applicationCorrelationId {
-    return [PayPalOneTouchCore clientMetadataID];
-}
-
-
 #pragma mark - Delegate Informers
 
 - (void)informDelegateWillPerformAppSwitch {
