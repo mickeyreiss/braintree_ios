@@ -25,7 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
     NSError *initializationError;
     if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client
                                                returnURLScheme:returnURLScheme
-                                              postingAnalytics:NO
                                                          error:&initializationError]) {
         [[BTLogger sharedLogger] log:@"Failed to initialize BTPayPalDriver: %@", initializationError];
         return nil;
@@ -51,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
     }];
 
     NSError *error;
-    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme postingAnalytics:YES error:&error]) {
+    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme error:&error]) {
         if (completionBlock) {
             completionBlock(nil, error);
         }
@@ -64,9 +63,9 @@ NS_ASSUME_NONNULL_BEGIN
         [PayPalOneTouchCore parseResponseURL:url
                              completionBlock:^(PayPalOneTouchCoreResult *result) {
                                  BTClient *client = [self clientWithMetadataForResult:result];
-                                 
+
                                  [self postAnalyticsEventWithClient:client forHandlingOneTouchResult:result];
-                                 
+
                                  switch (result.type) {
                                      case PayPalOneTouchResultTypeError:
                                          if (completionBlock) {
@@ -88,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
                                           applicationCorrelationID:[PayPalOneTouchCore clientMetadataID]
                                                            success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
                                                                [self postAnalyticsEventForTokenizationSuccessWithClient:client];
-                                                               
+
                                                                if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
                                                                    if (paypalPaymentMethod.email == nil) {
                                                                        paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
@@ -106,7 +105,7 @@ NS_ASSUME_NONNULL_BEGIN
                                                                    completionBlock(nil, error);
                                                                }
                                                            }];
-                                         
+
                                      }
                                          break;
                                  }
@@ -187,7 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark -
 
-+ (BOOL)verifyAppSwitchConfigurationForClient:(BTClient *)client returnURLScheme:(NSString *)returnURLScheme postingAnalytics:(BOOL)shouldPostAnalytics error:(NSError * __autoreleasing *)error {
++ (BOOL)verifyAppSwitchConfigurationForClient:(BTClient *)client returnURLScheme:(NSString *)returnURLScheme error:(NSError * __autoreleasing *)error {
     if (client == nil) {
         if (error != NULL) {
             *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
@@ -198,9 +197,7 @@ NS_ASSUME_NONNULL_BEGIN
     }
 
     if (!client.configuration.payPalEnabled) {
-        if (shouldPostAnalytics) {
-            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
-        }
+        [client postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
         if (error != NULL) {
             *error = [NSError errorWithDomain:BTBraintreePayPalErrorDomain
                                          code:BTPayPalErrorPayPalDisabled
@@ -210,9 +207,7 @@ NS_ASSUME_NONNULL_BEGIN
     }
 
     if (returnURLScheme == nil) {
-        if (shouldPostAnalytics) {
-            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-return-url-scheme"];
-        }
+        [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-return-url-scheme"];
         if (error != NULL) {
             *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
                                          code:BTAppSwitchErrorIntegrationReturnURLScheme
@@ -222,11 +217,9 @@ NS_ASSUME_NONNULL_BEGIN
     }
 
     if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:returnURLScheme]) {
-        if (shouldPostAnalytics) {
-            [client postAnalyticsEvent:@"ios.paypal-otc.preflight.invalid-return-url-scheme"];
-        }
+        [client postAnalyticsEvent:@"ios.paypal-otc.preflight.invalid-return-url-scheme"];
         if (error != NULL) {
-            NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", returnURLScheme];
+            NSString *errorMessage = [NSString stringWithFormat:@"Cannot app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", returnURLScheme];
             *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
                                          code:BTAppSwitchErrorIntegrationReturnURLScheme
                                      userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
