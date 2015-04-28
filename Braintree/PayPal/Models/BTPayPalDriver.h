@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class BTPayPalCheckout;
 @protocol BTPayPalDriverDelegate;
 
-/// The BTPayPalDriver enables you to obtain permission to charge your customers' PayPal accounts.
+/// The BTPayPalDriver enables you to obtain permission to charge your customers' PayPal accounts via app switch to the PayPal app and the browser.
 ///
 /// @note To make PayPal available, you must ensure that PayPal is enabled in your Braintree control panel. See our [online documentation](https://developers.braintreepayments.com/ios+ruby/guides/paypal) for details.
 ///
@@ -28,15 +28,25 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// To keep your UI in sync during app switch authentication, you may set a delegate, which will receive notifications as the PayPal driver progresses through the various steps necessary for user authentication.
 ///
-/// To help you decide how to present PayPal in your UI, helper methods are provided to indicate whether PayPal is available and whether the PayPal app is installed on this device.
+/// ## App Switching Details
+///
+/// This class will handle switching out of your app to the PayPal app or the browser (including the call to `-[UIApplication openURL:]`).
+///
+/// You must pass in a URL scheme that will be used to return to this app.
+///
+/// Your URL scheme must be registered as a URL Type in your info.plist, and it must start with your app's bundle identifier.
 @interface BTPayPalDriver : NSObject
 
 /// Initializes a PayPal app switch
 ///
-/// @param client An instance of BTClient for communicating with Braintree
+/// Note: BTPayPalDriver will fail to initialize if PayPal is not enabled in the control panel or the app is not set up correctly for app switch.
 ///
-/// @return A instance that is ready to perform authorization or checkout
-- (nonnull instancetype)initWithClient:(nonnull BTClient *)client NS_DESIGNATED_INITIALIZER;
+/// @param client An instance of BTClient for communicating with Braintree
+/// @param returnURLScheme Your app's URL Scheme
+///
+/// @return A instance that is ready to perform authorization or checkout or nil if the client or URL Scheme are invalid
+- (nullable instancetype)initWithClient:(BTClient *)client
+                        returnURLScheme:(NSString *)returnURLScheme NS_DESIGNATED_INITIALIZER;
 
 
 #pragma mark - PayPal Login
@@ -53,19 +63,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Checkout with PayPal for creating a transaction with a PayPal single payment via app switch to the PayPal App or the browser.
 ///
 /// @param completionBlock This completion will be invoked when authorization is complete.
-- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
+- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock UNAVAILABLE_ATTRIBUTE;
 
 
 #pragma mark - App Switch
-
-/// Set the URL scheme that will be used to return to this app
-///
-/// This is needed for instructing the PayPal authentication on how to return to your app.
-///
-/// Your URL scheme must be registered in your info.plist, and it must start with your app's bundle identifier.
-///
-/// @param scheme a URL scheme
-- (void)setReturnURLScheme:(NSString *)scheme;
 
 /// Determine whether the app switch return is valid for being handled by this instance
 ///
@@ -79,24 +80,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)handleAppSwitchReturnURL:(NSURL *)url;
 
 
-#pragma mark - UX Helpers
+#pragma mark - Delegate
 
 /// An optional delegate for receiving notifications about the lifecycle of a PayPal app switch for updating your UI
 @property (nonatomic, weak, nullable) id<BTPayPalDriverDelegate> delegate;
-
-/// Check whether or not it is possible to pay with PayPal (e.g. is your merchant account enabled in the Braintree control panel).
-///
-/// You should always check whether PayPal is available before displaying any PayPal UI in your checkout form.
-///
-/// @return YES iff PayPal is available
-- (BOOL)isAvailable;
-
-/// Identify whether this user is a likely candidate for One Touch based on the presence of the PayPal app.
-///
-/// You may use this method to increase the prominence of your PayPal button for certain users.
-///
-/// @return YES iff the PayPal app is available on this device
-+ (BOOL)isAppInstalled;
 
 @end
 

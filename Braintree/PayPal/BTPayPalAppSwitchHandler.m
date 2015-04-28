@@ -63,8 +63,8 @@
     self.delegate = delegate;
     self.client = client;
 
-    BTPayPalDriver *payPalDriver = [[BTPayPalDriver alloc] initWithClient:client];
-    [payPalDriver setReturnURLScheme:self.returnURLScheme];
+    BTPayPalDriver *payPalDriver = [[BTPayPalDriver alloc] initWithClient:client
+                                                          returnURLScheme:self.returnURLScheme];
     payPalDriver.delegate = self;
 
     // Capture return in block in case there is a synchronous failure
@@ -101,10 +101,7 @@
 }
 
 - (BOOL)appSwitchAvailableForClient:(BTClient *)client {
-    BTPayPalDriver *payPalDriver = [[BTPayPalDriver alloc] initWithClient:client];
-    [payPalDriver setReturnURLScheme:self.returnURLScheme];
-
-    return [payPalDriver isAvailable];
+    return client.configuration.payPalEnabled;
 }
 
 #pragma mark BTPayPalDelegate

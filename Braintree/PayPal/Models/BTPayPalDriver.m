@@ -7,10 +7,12 @@
 #import "BTClient_Internal.h"
 #import "BTLogger_Internal.h"
 
-#import "BTAppSwitchErrors.h" // TODO: Remove (unnecessary tight coupling with API)
+#import "BTAppSwitchErrors.h"
 #import "BTErrors+BTPayPal.h"
 
 static void (^BTPayPalHandleURLContinuation)(NSURL *url);
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface BTPayPalDriver ()
 @property (nonatomic, strong) BTClient *client;
@@ -19,10 +21,20 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
 @implementation BTPayPalDriver
 
-- (nonnull instancetype)initWithClient:(nonnull BTClient *)client {
+- (nullable instancetype)initWithClient:(BTClient * __nonnull)client returnURLScheme:(NSString * __nonnull)returnURLScheme {
+    NSError *initializationError;
+    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client
+                                               returnURLScheme:returnURLScheme
+                                              postingAnalytics:NO
+                                                         error:&initializationError]) {
+        [[BTLogger sharedLogger] log:@"Failed to initialize BTPayPalDriver: %@", initializationError];
+        return nil;
+    }
+
     self = [super init];
     if (self) {
         self.client = client;
+        self.returnURLScheme = returnURLScheme;
     }
     return self;
 }
@@ -39,7 +51,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
     }];
 
     NSError *error;
-    if (![self verifyAppSwitchConfigurationForClient:client postingAnalytics:YES error:&error]) {
+    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme postingAnalytics:YES error:&error]) {
         if (completionBlock) {
             completionBlock(nil, error);
         }
@@ -140,16 +152,6 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
     }
 }
 
-#pragma mark - UX Helpers
-
-- (BOOL)isAvailable {
-    return [self verifyAppSwitchConfigurationForClient:self.client postingAnalytics:NO error:NULL];
-}
-
-+ (BOOL)isAppInstalled {
-    return [PayPalOneTouchCore isWalletAppInstalled];
-}
-
 
 #pragma mark - Delegate Informers
 
@@ -185,7 +187,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
 #pragma mark -
 
-- (BOOL)verifyAppSwitchConfigurationForClient:(BTClient *)client postingAnalytics:(BOOL)shouldPostAnalytics error:(NSError * __autoreleasing *)error {
++ (BOOL)verifyAppSwitchConfigurationForClient:(BTClient *)client returnURLScheme:(NSString *)returnURLScheme postingAnalytics:(BOOL)shouldPostAnalytics error:(NSError * __autoreleasing *)error {
     if (client == nil) {
         if (error != NULL) {
             *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
@@ -207,7 +209,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
         return NO;
     }
 
-    if (self.returnURLScheme == nil) {
+    if (returnURLScheme == nil) {
         if (shouldPostAnalytics) {
             [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-return-url-scheme"];
         }
@@ -219,12 +221,12 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
         return NO;
     }
 
-    if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:self.returnURLScheme]) {
+    if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:returnURLScheme]) {
         if (shouldPostAnalytics) {
             [client postAnalyticsEvent:@"ios.paypal-otc.preflight.invalid-return-url-scheme"];
         }
         if (error != NULL) {
-            NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", self.returnURLScheme];
+            NSString *errorMessage = [NSString stringWithFormat:@"Can not app switch to PayPal. Verify that the return URL scheme (%@) starts with this app's bundle id, and that the PayPal app is installed.", returnURLScheme];
             *error = [NSError errorWithDomain:BTAppSwitchErrorDomain
                                          code:BTAppSwitchErrorIntegrationReturnURLScheme
                                      userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
@@ -358,3 +360,5 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 }
 
 @end
+
+NS_ASSUME_NONNULL_END
