@@ -29,7 +29,7 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
 #pragma mark - PayPal Lifecycle
 
-- (void)startAuthorizationWithCompletion:(void (^ __nonnull)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
+- (void)startAuthorizationWithCompletion:(nullable void (^)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
     BTClient *client = [self.client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
         if ([PayPalOneTouchCore isWalletAppInstalled]) {
             metadata.source = BTClientMetadataSourcePayPalApp;
@@ -124,10 +124,14 @@ static void (^BTPayPalHandleURLContinuation)(NSURL *url);
     }];
 }
 
-- (void)startCheckout:(__unused BTPayPalCheckout * __nonnull)checkout completion:(__unused void (^ __nonnull)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
+- (void)startCheckout:(__unused BTPayPalCheckout * __nonnull)checkout completion:(nullable __unused void (^)(BTPayPalPaymentMethod * __nullable paymentMethod, NSError * __nullable error))completionBlock {
     @throw [NSException exceptionWithName:NSInternalInconsistencyException
                                    reason:@"Checkout is not yet implemented 😩."
                                  userInfo:nil];
+}
+
++ (BOOL)canHandleAppSwitchReturnURL:(NSURL * __nonnull)url sourceApplication:(NSString * __nonnull)sourceApplication {
+    return BTPayPalHandleURLContinuation != nil && [PayPalOneTouchCore canParseURL:url sourceApplication:sourceApplication];
 }
 
 + (void)handleAppSwitchReturnURL:(NSURL * __nonnull)url {

@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class BTPayPalCheckout;
 @protocol BTPayPalDriverDelegate;
 
-/// The BTPayPal enables you to obtain permission to charge your customers' PayPal accounts.
+/// The BTPayPalDriver enables you to obtain permission to charge your customers' PayPal accounts.
 ///
 /// @note To make PayPal available, you must ensure that PayPal is enabled in your Braintree control panel. See our [online documentation](https://developers.braintreepayments.com/ios+ruby/guides/paypal) for details.
 ///
@@ -48,12 +48,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Note that during the app switch authorization, the user may switch back to your app manually. In this case, the caller will not receive a cancelation via the completionBlock. Rather, it is the caller's responsibility to observe `UIApplicationDidBecomeActiveNotification` and `UIApplicationWillResignActiveNotification` using `NSNotificationCenter` if necessary.
 ///
 /// @param completionBlock This completion will be invoked exactly once when authorization is complete or an error occurs.
-- (void)startAuthorizationWithCompletion:(void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
+- (void)startAuthorizationWithCompletion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
 
 /// Checkout with PayPal for creating a transaction with a PayPal single payment via app switch to the PayPal App or the browser.
 ///
 /// @param completionBlock This completion will be invoked when authorization is complete.
-- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
+- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
 
 
 #pragma mark - App Switch
@@ -67,8 +67,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param scheme a URL scheme
 - (void)setReturnURLScheme:(NSString *)scheme;
 
+/// Determine whether the app switch return is valid for being handled by this instance
+///
+/// @param url the URL you receive in application:openURL:sourceApplication:annotation when PayPal returns back to your app
+/// @param sourceApplication the sourceApplication you receive in application:openURL:sourceApplication:annotation when PayPal returns back to your app
++ (BOOL)canHandleAppSwitchReturnURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication;
 
-/// Pass control back into BTPayPal after an app switch return. You must call this method in application:openURL:sourceApplication:annotation.
+/// Pass control back into BTPayPalDriver after an app switch return. You must call this method in application:openURL:sourceApplication:annotation.
 ///
 /// @param url the URL you receive in application:openURL:sourceApplication:annotation when PayPal returns back to your app
 + (void)handleAppSwitchReturnURL:(NSURL *)url;
