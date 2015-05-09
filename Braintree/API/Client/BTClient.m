@@ -413,14 +413,11 @@ NSString *const BTClientPayPalConfigurationError = @"The PayPal SDK could not be
  applicationCorrelationID:(NSString *)correlationId
                   success:(BTClientPaypalSuccessBlock)successBlock
                   failure:(BTClientFailureBlock)failureBlock {
-
-
-    // TODO: Pass entire paypalResponse to CAPI instead of parsing the code here
-    NSString *code = paypalResponse[@"response"][@"code"];
-    NSDictionary *parameters = @{ @"paypal_account": @{
-                            @"consent_code": code ?: NSNull.null,
-                            @"correlation_id": correlationId ?: NSNull.null },
-    @"authorization_fingerprint": self.clientToken.authorizationFingerprint };
+    
+    NSMutableDictionary *paypalParameters = [paypalResponse mutableCopy];
+    paypalParameters[@"correlation_id"] = correlationId;
+    NSDictionary *parameters = @{ @"paypal_account": paypalParameters,
+                                  @"authorization_fingerprint": self.clientToken.authorizationFingerprint };
     [self.clientApiHttp POST:@"v1/payment_methods/paypal_accounts"
                   parameters:parameters
                   completion:^(BTHTTPResponse *response, NSError *error) {
