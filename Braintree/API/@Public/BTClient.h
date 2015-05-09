@@ -10,8 +10,6 @@
 #import "BTClientCardRequest.h"
 
 @class BTClient, BTCoinbasePaymentMethod;
-// TODO: Remove this constant?
-extern NSString *const BTClientPayPalMobileEnvironmentName;
 
 #pragma mark Types
 
