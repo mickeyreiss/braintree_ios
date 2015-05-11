@@ -60,7 +60,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param completionBlock This completion will be invoked exactly once when authorization is complete or an error occurs.
 - (void)startAuthorizationWithCompletion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
 
-/// Checkout with PayPal for creating a transaction with a PayPal single payment via app switch to the PayPal App or the browser.
+/// Checkout with PayPal for creating a single-use PayPal payment method nonce.
+///
+/// You can use this as the final step in your order/checkout flow. If you want, you may create a transaction from your server when this method completes without any additional user interaction.
+///
+/// @note This method is mutually exclusive with startAuthorizationWithCompletion:. In either case, you need to create a Braintree transaction from your server in order to actually move money!
 ///
 /// @param completionBlock This completion will be invoked when authorization is complete.
 - (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock UNAVAILABLE_ATTRIBUTE;
