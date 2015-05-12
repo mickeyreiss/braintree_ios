@@ -9,6 +9,7 @@
 #import "PayPalOneTouchCore.h"
 
 #import "BTPayPalDriver.h"
+#import "BTPayPalDriver_Compatibility.h"
 
 @interface BTPayPalAppSwitchHandler () <BTPayPalDriverDelegate>
 @end
@@ -33,11 +34,11 @@
     if (self.client == nil || self.delegate == nil) {
         return NO;
     }
-
+    
     if (![[url.scheme lowercaseString] isEqualToString:[self.returnURLScheme lowercaseString]]) {
         return NO;
     }
-
+    
     if (![PayPalOneTouchCore canParseURL:url sourceApplication:sourceApplication]) {
         return NO;
     }
@@ -49,28 +50,36 @@
 }
 
 - (BOOL)initiateAppSwitchWithClient:(BTClient *)client delegate:(id<BTAppSwitchingDelegate>)delegate error:(NSError *__autoreleasing *)errorPtr {
-
+    
     if (delegate == nil) {
         [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-delegate"];
         if (errorPtr != NULL) {
             *errorPtr = [NSError errorWithDomain:BTAppSwitchErrorDomain
-                                         code:BTAppSwitchErrorIntegrationInvalidParameters
-                                     userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a delegate." }];
+                                            code:BTAppSwitchErrorIntegrationInvalidParameters
+                                        userInfo:@{ NSLocalizedDescriptionKey: @"PayPal app switch is missing a delegate." }];
         }
         return NO;
     }
-
+    
     self.delegate = delegate;
     self.client = client;
-
+    
+    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client
+                                               returnURLScheme:self.returnURLScheme
+                                                         error:errorPtr]) {
+        return NO;
+    }
+    
+    
     BTPayPalDriver *payPalDriver = [[BTPayPalDriver alloc] initWithClient:client
                                                           returnURLScheme:self.returnURLScheme];
-    payPalDriver.delegate = self;
 
+    payPalDriver.delegate = self;
+    
     // Capture return in block in case there is a synchronous failure
     __block BOOL returnValue = YES;
     __block BOOL didReturn = NO;
-
+    
     [payPalDriver startAuthorizationWithCompletion:^(BTPayPalPaymentMethod * __nullable paymentMethod, NSError * __nullable error) {
         if (didReturn) {
             if (paymentMethod) {
@@ -87,16 +96,16 @@
             }
         }
     }];
-
+    
     // For backwards compatibility, set a default error message, in case PayPal driver fails without a specific error
     if (returnValue == NO && errorPtr != NULL && *errorPtr == NULL) {
         *errorPtr = [NSError errorWithDomain:BTAppSwitchErrorDomain
                                         code:BTAppSwitchErrorFailed
                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to initiate PayPal app switch."}];
     }
-
+    
     didReturn = YES;
-
+    
     return returnValue;
 }
 

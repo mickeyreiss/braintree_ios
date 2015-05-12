@@ -1,6 +1,5 @@
 #import "BTPayPalAppSwitchHandler_Internal.h"
 #import "BTClient_Internal.h"
-#import "BTClientToken.h"
 #import "PayPalOneTouchCore.h"
 #import "PayPalOneTouchRequest.h"
 
@@ -8,16 +7,19 @@ SpecBegin(BTPayPalAppSwitchHandler)
 
 __block id client;
 __block id clientToken;
+__block id configuration;
 __block id delegate;
 __block id payPalTouch;
 
 beforeEach(^{
     client = [OCMockObject mockForClass:[BTClient class]];
+    configuration = [OCMockObject mockForClass:[BTConfiguration class]];
     clientToken = [OCMockObject mockForClass:[BTClientToken class]];
     delegate = [OCMockObject mockForProtocol:@protocol(BTAppSwitchingDelegate)];
     payPalTouch = [OCMockObject mockForClass:[PayPalOneTouchCore class]];
 
     [[[client stub] andReturn:client] copyWithMetadata:OCMOCK_ANY];
+    [[[client stub] andReturn:configuration] configuration];
     [[[client stub] andReturn:clientToken] clientToken];
 });
 
@@ -50,7 +52,7 @@ describe(@"initiatePayPalAuthWithClient:delegate:", ^{
 
     context(@"with PayPal disabled", ^{
         it(@"returns error with code indicating PayPal is disabled", ^{
-            [[[clientToken stub] andReturnValue:@NO] payPalEnabled];
+            [[[configuration stub] andReturnValue:@NO] payPalEnabled];
             [[client expect] postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
             NSError *error;
             BOOL handled = [appSwitchHandler initiateAppSwitchWithClient:client delegate:delegate error:&error];
@@ -62,7 +64,7 @@ describe(@"initiatePayPalAuthWithClient:delegate:", ^{
 
     context(@"with PayPal and PayPal Touch enabled", ^{
         beforeEach(^{
-            [[[clientToken stub] andReturnValue:@YES] payPalEnabled];
+            [[[configuration stub] andReturnValue:@YES] payPalEnabled];
             appSwitchHandler.returnURLScheme = @"a-scheme";
         });
 
@@ -101,13 +103,13 @@ describe(@"initiatePayPalAuthWithClient:delegate:", ^{
             __block id authorizationRequestStub;
 
             beforeEach(^{
-                [[[clientToken stub] andReturnValue:@YES] payPalEnabled];
-                [[[clientToken stub] andReturn:@"some-client-id"] payPalClientId];
-                [[[clientToken stub] andReturn:@"http://example.com/privacy"] btPayPal_privacyPolicyURL];
-                [[[clientToken stub] andReturn:@"http://example.com/tos"] btPayPal_merchantUserAgreementURL];
-                [[[clientToken stub] andReturn:@"Example Merchant"] btPayPal_merchantName];
-                [[[clientToken stub] andReturn:@"mock"] payPalEnvironment];
-                [[[clientToken stub] andReturn:@"fake-client-token-string"] originalClientTokenString];
+                [[[configuration stub] andReturnValue:@YES] payPalEnabled];
+                [[[configuration stub] andReturn:@"some-client-id"] payPalClientId];
+                [[[configuration stub] andReturn:@"http://example.com/privacy"] payPalPrivacyPolicyURL];
+                [[[configuration stub] andReturn:@"http://example.com/tos"] payPalMerchantUserAgreementURL];
+                [[[configuration stub] andReturn:@"Example Merchant"] payPalMerchantName];
+                [[[configuration stub] andReturn:@"mock"] payPalEnvironment];
+                [[[clientToken stub] andReturn:@"fake-client-token-string"] originalValue];
                 [[[[payPalTouch stub] andReturnValue:@YES] classMethod] doesApplicationSupportOneTouchCallbackURLScheme:OCMOCK_ANY];
 
                 authorizationRequestStub = [OCMockObject mockForClass:[PayPalOneTouchAuthorizationRequest class]];
