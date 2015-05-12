@@ -11,6 +11,7 @@
 #import "BTAppSwitch.h"
 #import "BTVenmoAppSwitchHandler.h"
 #import "BTPayPalAppSwitchHandler.h"
+#import "BTPayPalDriver.h"
 
 #import "BTCoinbase.h"
 
@@ -201,7 +202,14 @@
 
 + (BOOL)handleOpenURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication {
     [self initAppSwitchingOptions];
-    return [[BTAppSwitch sharedInstance] handleReturnURL:url sourceApplication:sourceApplication];
+    if ([[BTAppSwitch sharedInstance] handleReturnURL:url sourceApplication:sourceApplication]) {
+        return YES;
+    } else if ([BTPayPalDriver canHandleAppSwitchReturnURL:url sourceApplication:sourceApplication]) {
+        [BTPayPalDriver handleAppSwitchReturnURL:url];
+        return YES;
+    } else {
+        return NO;
+    }
 }
 
 + (void)initAppSwitchingOptions {

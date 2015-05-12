@@ -1,11 +1,11 @@
 @import Foundation;
 
 #import "BTPayPalPaymentMethod.h"
+#import "BTPayPalCheckout.h"
 #import "BTClient.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class BTPayPalCheckout;
 @protocol BTPayPalDriverDelegate;
 
 /// The BTPayPalDriver enables you to obtain permission to charge your customers' PayPal accounts via app switch to the PayPal app and the browser.
@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note This method is mutually exclusive with startAuthorizationWithCompletion:. In either case, you need to create a Braintree transaction from your server in order to actually move money!
 ///
 /// @param completionBlock This completion will be invoked when authorization is complete.
-- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock UNAVAILABLE_ATTRIBUTE;
+- (void)startCheckout:(BTPayPalCheckout *)checkout completion:(nullable void (^)(BTPayPalPaymentMethod *__nullable paymentMethod, NSError *__nullable error))completionBlock;
 
 
 #pragma mark - App Switch

@@ -10,6 +10,8 @@
 #import "BTAppSwitchErrors.h"
 #import "BTErrors+BTPayPal.h"
 
+#import "BTAppSwitch.h"
+
 static void (^BTPayPalHandleURLContinuation)(NSURL *url);
 
 NS_ASSUME_NONNULL_BEGIN
@@ -40,8 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - PayPal Lifecycle
 
-- (void)startAuthorizationWithCompletion:(nullable void (^)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
-    BTClient *client = [self.client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
+- (BTClient *)copyClientForPayPal:(BTClient *)client error:(NSError * __autoreleasing *)error {
+    client = [client copyWithMetadata:^(BTClientMutableMetadata *metadata) {
         if ([PayPalOneTouchCore isWalletAppInstalled]) {
             metadata.source = BTClientMetadataSourcePayPalApp;
         } else {
@@ -49,8 +51,17 @@ NS_ASSUME_NONNULL_BEGIN
         }
     }];
     
+    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme error:error]) {
+        return nil;
+    }
+    return client;
+}
+
+- (void)startAuthorizationWithCompletion:(nullable void (^)(BTPayPalPaymentMethod * __nullable, NSError * __nullable))completionBlock {
     NSError *error;
-    if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme error:&error]) {
+    BTClient *client = [self copyClientForPayPal:self.client error:&error];
+
+    if (error) {
         if (completionBlock) {
             completionBlock(nil, error);
         }
@@ -74,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
                                          break;
                                      case PayPalOneTouchResultTypeCancel:
                                          if (result.error) {
-                                             [[BTLogger sharedLogger] error:@"PayPal Wallet error: %@", result.error];
+                                             [[BTLogger sharedLogger] error:@"PayPal error: %@", result.error];
                                              return;
                                          }
                                          if (completionBlock) {
@@ -136,9 +147,98 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)startCheckout:(__unused BTPayPalCheckout * __nonnull)checkout completion:(nullable __unused void (^)(BTPayPalPaymentMethod * __nullable paymentMethod, NSError * __nullable error))completionBlock {
-    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                   reason:@"Checkout is not yet implemented 😩."
-                                 userInfo:nil];
+    NSError *error;
+    BTClient *client = [self copyClientForPayPal:self.client error:&error];
+    
+    if (error) {
+        if (completionBlock) {
+            completionBlock(nil, error);
+        }
+        return;
+    }
+    
+    if (checkout == nil) {
+        [[BTLogger sharedLogger] log:@"BTPayPalDriver failed to start checkout - checkout must not be nil."];
+        return;
+    }
+    
+    NSString *redirectUri;
+    NSString *cancelUri;
+    [PayPalOneTouchCore redirectURLsForCallbackURLScheme:self.returnURLScheme
+                                           withReturnURL:&redirectUri
+                                           withCancelURL:&cancelUri];
+    
+    [client createPayPalPaymentResourceWithAmount:checkout.amount
+                                     currencyCode:checkout.currencyCode ?: client.configuration.payPalCurrencyCode
+                                      redirectUri:redirectUri
+                                        cancelUri:cancelUri
+                                 clientMetadataID:[PayPalOneTouchCore clientMetadataID]
+                                          success:^(BTClientPayPalPaymentResource *paymentResource) {                                              
+                                              BTPayPalHandleURLContinuation = ^(NSURL *url){
+                                                  [self informDelegateWillProcessAppSwitchResult];
+                                                  
+                                                  [PayPalOneTouchCore parseResponseURL:url
+                                                                       completionBlock:^(PayPalOneTouchCoreResult *result) {
+                                                                           BTClient *client = [self clientWithMetadataForResult:result];
+                                                                           
+                                                                           [self postAnalyticsEventWithClient:client forHandlingOneTouchResult:result];
+                                                                           
+                                                                           switch (result.type) {
+                                                                               case PayPalOneTouchResultTypeError:
+                                                                                   if (completionBlock) {
+                                                                                       completionBlock(nil, result.error);
+                                                                                   }
+                                                                                   break;
+                                                                               case PayPalOneTouchResultTypeCancel:
+                                                                                   if (result.error) {
+                                                                                       [[BTLogger sharedLogger] error:@"PayPal error: %@", result.error];
+                                                                                       return;
+                                                                                   }
+                                                                                   if (completionBlock) {
+                                                                                       completionBlock(nil, nil);
+                                                                                   }
+                                                                                   break;
+                                                                               case PayPalOneTouchResultTypeSuccess: {
+                                                                                   [client savePaypalAccount:result.response
+                                                                                            clientMetadataID:[PayPalOneTouchCore clientMetadataID]
+                                                                                                     success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
+                                                                                                         [self postAnalyticsEventForTokenizationSuccessWithClient:client];
+                                                                                                         
+                                                                                                         if (completionBlock) {
+                                                                                                             completionBlock(paypalPaymentMethod, nil);
+                                                                                                         }
+                                                                                                     } failure:^(NSError *error) {
+                                                                                                         [self postAnalyticsEventForTokenizationFailureWithClient:client];
+                                                                                                         if (completionBlock) {
+                                                                                                             completionBlock(nil, error);
+                                                                                                         }
+                                                                                                     }];
+                                                                                   
+                                                                               }
+                                                                                   break;
+                                                                           }
+                                                                           BTPayPalHandleURLContinuation = nil;
+                                                                       }];
+                                              };
+                                              
+                                              PayPalOneTouchCheckoutRequest *request = [PayPalOneTouchCheckoutRequest requestWithApprovalURL:paymentResource.redirectURL
+                                                                                                                                    clientID:client.configuration.payPalClientId
+                                                                                                                                 environment:[self payPalEnvironmentForClient:client]
+                                                                                                                           callbackURLScheme:self.returnURLScheme];
+                                              [self informDelegateWillPerformAppSwitch];
+                                              [request performWithCompletionBlock:^(BOOL success, PayPalOneTouchRequestTarget target, NSError *error) {
+                                                  if (success) {
+                                                      [self informDelegateDidPerformAppSwitchToTarget:target];
+                                                  } else {
+                                                      if (completionBlock) {
+                                                          completionBlock(nil, error);
+                                                      }
+                                                  }
+                                              }];
+                                          }
+                                          failure:^(NSError *error) {
+                                              completionBlock(nil, error);
+                                          }];
 }
 
 + (BOOL)canHandleAppSwitchReturnURL:(NSURL * __nonnull)url sourceApplication:(NSString * __nonnull)sourceApplication {
