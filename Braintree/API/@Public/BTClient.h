@@ -105,7 +105,7 @@ typedef void (^BTClientFailureBlock)(NSError *error);
 
 
 - (void)savePaypalAccount:(NSDictionary *)paypalResponse
- applicationCorrelationID:(NSString *)applicationCorrelationId
+         clientMetadataID:(NSString *)applicationCorrelationId
                   success:(BTClientPaypalSuccessBlock)successBlock
                   failure:(BTClientFailureBlock)failureBlock;
 

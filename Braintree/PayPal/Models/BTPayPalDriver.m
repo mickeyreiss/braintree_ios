@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
         [[BTLogger sharedLogger] log:@"Failed to initialize BTPayPalDriver: %@", initializationError];
         return nil;
     }
-
+    
     self = [super init];
     if (self) {
         self.client = client;
@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
             metadata.source = BTClientMetadataSourcePayPalBrowser;
         }
     }];
-
+    
     NSError *error;
     if (![BTPayPalDriver verifyAppSwitchConfigurationForClient:client returnURLScheme:self.returnURLScheme error:&error]) {
         if (completionBlock) {
@@ -56,16 +56,16 @@ NS_ASSUME_NONNULL_BEGIN
         }
         return;
     }
-
+    
     BTPayPalHandleURLContinuation = ^(NSURL *url){
         [self informDelegateWillProcessAppSwitchResult];
-
+        
         [PayPalOneTouchCore parseResponseURL:url
                              completionBlock:^(PayPalOneTouchCoreResult *result) {
                                  BTClient *client = [self clientWithMetadataForResult:result];
-
+                                 
                                  [self postAnalyticsEventWithClient:client forHandlingOneTouchResult:result];
-
+                                 
                                  switch (result.type) {
                                      case PayPalOneTouchResultTypeError:
                                          if (completionBlock) {
@@ -84,10 +84,10 @@ NS_ASSUME_NONNULL_BEGIN
                                      case PayPalOneTouchResultTypeSuccess: {
                                          NSString *userDisplayStringFromAppSwitchResponse = result.response[@"user"][@"display_string"];
                                          [client savePaypalAccount:result.response
-                                          applicationCorrelationID:[PayPalOneTouchCore clientMetadataID]
+                                                  clientMetadataID:[PayPalOneTouchCore clientMetadataID]
                                                            success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
                                                                [self postAnalyticsEventForTokenizationSuccessWithClient:client];
-
+                                                               
                                                                if ([userDisplayStringFromAppSwitchResponse isKindOfClass:[NSString class]]) {
                                                                    if (paypalPaymentMethod.email == nil) {
                                                                        paypalPaymentMethod.email = userDisplayStringFromAppSwitchResponse;
@@ -105,14 +105,14 @@ NS_ASSUME_NONNULL_BEGIN
                                                                    completionBlock(nil, error);
                                                                }
                                                            }];
-
+                                         
                                      }
                                          break;
                                  }
                                  BTPayPalHandleURLContinuation = nil;
                              }];
     };
-
+    
     PayPalOneTouchAuthorizationRequest *request =
     [PayPalOneTouchAuthorizationRequest requestWithScopeValues:self.OAuth2Scopes
                                                     privacyURL:client.configuration.payPalPrivacyPolicyURL
@@ -121,7 +121,7 @@ NS_ASSUME_NONNULL_BEGIN
                                                    environment:[self payPalEnvironmentForClient:client]
                                              callbackURLScheme:[self returnURLScheme]];
     request.additionalPayloadAttributes = @{ @"client_token": client.clientToken.originalValue };
-
+    
     [self informDelegateWillPerformAppSwitch];
     [request performWithCompletionBlock:^(BOOL success, PayPalOneTouchRequestTarget target, NSError *error) {
         [self postAnalyticsEventWithClient:client forInitiatingOneTouchWithSuccess:success target:target];
@@ -174,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
                 break;
         }
     }
-
+    
 }
 
 - (void)informDelegateWillProcessAppSwitchResult {
@@ -195,7 +195,7 @@ NS_ASSUME_NONNULL_BEGIN
         }
         return NO;
     }
-
+    
     if (!client.configuration.payPalEnabled) {
         [client postAnalyticsEvent:@"ios.paypal-otc.preflight.disabled"];
         if (error != NULL) {
@@ -205,7 +205,7 @@ NS_ASSUME_NONNULL_BEGIN
         }
         return NO;
     }
-
+    
     if (returnURLScheme == nil) {
         [client postAnalyticsEvent:@"ios.paypal-otc.preflight.nil-return-url-scheme"];
         if (error != NULL) {
@@ -215,7 +215,7 @@ NS_ASSUME_NONNULL_BEGIN
         }
         return NO;
     }
-
+    
     if (![PayPalOneTouchCore doesApplicationSupportOneTouchCallbackURLScheme:returnURLScheme]) {
         [client postAnalyticsEvent:@"ios.paypal-otc.preflight.invalid-return-url-scheme"];
         if (error != NULL) {
@@ -226,7 +226,7 @@ NS_ASSUME_NONNULL_BEGIN
         }
         return NO;
     }
-
+    
     return YES;
 }
 

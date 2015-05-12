@@ -28,6 +28,7 @@ extern NSString *const BTConfigurationKeyPayPalMerchantPrivacyPolicyUrl;
 extern NSString *const BTConfigurationKeyPayPalMerchantUserAgreementUrl;
 extern NSString *const BTConfigurationKeyPayPalEnvironment;
 extern NSString *const BTConfigurationKeyPayPalEnabled;
+extern NSString *const BTConfigurationKeyPayPalCurrencyCode;
 
 extern NSString *const BTConfigurationPayPalEnvironmentCustom;
 extern NSString *const BTConfigurationPayPalEnvironmentLive;
@@ -82,6 +83,7 @@ extern NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgree
 - (NSString *)payPalMerchantName;
 - (NSURL *)payPalMerchantUserAgreementURL;
 - (NSURL *)payPalPrivacyPolicyURL;
+- (NSString *)payPalCurrencyCode;
 
 #pragma mark Coinbase
 

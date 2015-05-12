@@ -705,6 +705,10 @@
 		A763BED919B8C3E90087939C /* BTPaymentsSpec.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTPaymentsSpec.m; sourceTree = "<group>"; };
 		A79509771A5F0C1200CAA382 /* KIFSystemTestActor+BTNetworkActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "KIFSystemTestActor+BTNetworkActivity.h"; sourceTree = "<group>"; };
 		A79509781A5F0C1200CAA382 /* KIFSystemTestActor+BTNetworkActivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "KIFSystemTestActor+BTNetworkActivity.m"; sourceTree = "<group>"; };
+		A795EE0A1B0184DC00AD28CF /* BTClientPayPalPaymentResource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTClientPayPalPaymentResource.h; sourceTree = "<group>"; };
+		A795EE0B1B0184DC00AD28CF /* BTClientPayPalPaymentResource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTClientPayPalPaymentResource.m; sourceTree = "<group>"; };
+		A795EE0C1B01859300AD28CF /* BTClientPayPalPaymentResourceValueTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTClientPayPalPaymentResourceValueTransformer.h; sourceTree = "<group>"; };
+		A795EE0D1B01859300AD28CF /* BTClientPayPalPaymentResourceValueTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTClientPayPalPaymentResourceValueTransformer.m; sourceTree = "<group>"; };
 		A79AC9A5193E6F7E0095D7F1 /* BTHTTPSSLPinningSpec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHTTPSSLPinningSpec.m; sourceTree = "<group>"; };
 		A79ACA33193FB27E0095D7F1 /* BTHTTP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTHTTP.h; sourceTree = "<group>"; };
 		A79ACA34193FB27E0095D7F1 /* BTHTTP.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BTHTTP.m; sourceTree = "<group>"; };

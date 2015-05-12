@@ -212,6 +212,12 @@ describe(@"PayPal", ^{
         });
     });
     
+    describe(@"payPalCurrencyCode", ^{
+        it(@"returns the PayPal currency code as specified by the configuration", ^{
+            expect(configuration.payPalCurrencyCode).to.equal(@"USD");
+        });
+    });
+    
     describe(@"isPayPalEnabled", ^{
         __block BTConfiguration *configurationPayPalDisabled;
         beforeEach(^{

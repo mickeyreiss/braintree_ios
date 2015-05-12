@@ -104,7 +104,7 @@ describe(@"PayPal One Touch Core", ^{
                         void (^successBlock)(BTPaymentMethod *paymentMethod);
                         [invocation getArgument:&successBlock atIndex:4];
                         successBlock(fakePaymentMethod);
-                    }] savePaypalAccount:OCMOCK_ANY applicationCorrelationID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
+                    }] savePaypalAccount:OCMOCK_ANY clientMetadataID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
 
                     [[[mockApplication stub] andReturnValue:@YES] canOpenURL:OCMOCK_ANY];
                     [[[mockApplication stub] andReturnValue:@YES] openURL:OCMOCK_ANY];
@@ -355,7 +355,7 @@ describe(@"PayPal One Touch Core", ^{
                         void (^successBlock)(BTPaymentMethod *paymentMethod);
                         [invocation getArgument:&successBlock atIndex:4];
                         successBlock(nil);
-                    }] savePaypalAccount:OCMOCK_ANY applicationCorrelationID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
+                    }] savePaypalAccount:OCMOCK_ANY clientMetadataID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
 
                     [[[mockApplication stub] andReturnValue:@YES] canOpenURL:OCMOCK_ANY];
                     [[[mockApplication stub] andReturnValue:@YES] openURL:OCMOCK_ANY];
@@ -396,7 +396,7 @@ describe(@"PayPal One Touch Core", ^{
                         void (^failureBlock)(BTPaymentMethod *paymentMethod);
                         [invocation getArgument:&failureBlock atIndex:5];
                         failureBlock(nil);
-                    }] savePaypalAccount:OCMOCK_ANY applicationCorrelationID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
+                    }] savePaypalAccount:OCMOCK_ANY clientMetadataID:OCMOCK_ANY success:OCMOCK_ANY failure:OCMOCK_ANY];
 
                     [[[mockApplication stub] andReturnValue:@YES] canOpenURL:OCMOCK_ANY];
                     [[[mockApplication stub] andReturnValue:@YES] openURL:OCMOCK_ANY];

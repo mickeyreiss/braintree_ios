@@ -22,6 +22,7 @@ NSString *const BTConfigurationKeyPayPalMerchantName = @"displayName";
 NSString *const BTConfigurationKeyPayPalMerchantPrivacyPolicyUrl = @"privacyUrl";
 NSString *const BTConfigurationKeyPayPalMerchantUserAgreementUrl = @"userAgreementUrl";
 NSString *const BTConfigurationKeyPayPalEnvironment = @"environment";
+NSString *const BTConfigurationKeyPayPalCurrencyCode = @"currencyIsoCode";
 
 NSString *const BTConfigurationPayPalBraintreeProxyBasePath = @"/v1/";
 NSString *const BTConfigurationPayPalEnvironmentCustom = @"custom";
@@ -222,6 +223,10 @@ NSString *const BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl
 
 - (NSString *)payPalEnvironment {
     return [self.payPalConfiguration stringForKey:BTConfigurationKeyPayPalEnvironment];
+}
+
+- (NSString *)payPalCurrencyCode {
+    return [self.payPalConfiguration stringForKey:BTConfigurationKeyPayPalCurrencyCode];
 }
 
 - (BOOL)payPalEnabled {

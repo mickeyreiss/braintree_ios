@@ -805,7 +805,7 @@ sharedExamplesFor(@"a BTClient", ^(NSDictionary *data) {
                                              @"response": @{ @"code": @"testAuthCode" },
                                              @"response_type": @"authorization_code",
                                              }
-                 applicationCorrelationID:@"testCorrelationId"
+                         clientMetadataID:@"testCorrelationId"
                                   success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
                                       expect(payPalPaymentMethod.nonce).to.beANonce();
                                       expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
@@ -820,7 +820,7 @@ sharedExamplesFor(@"a BTClient", ^(NSDictionary *data) {
                                              @"response": @{ @"code": @"testAuthCode" },
                                              @"response_type": @"authorization_code",
                                              }
-                 applicationCorrelationID:nil
+                         clientMetadataID:nil
                                   success:^(BTPayPalPaymentMethod *payPalPaymentMethod){
                                       expect(payPalPaymentMethod.nonce).to.beANonce();
                                       expect(payPalPaymentMethod.email).to.beKindOf([NSString class]);
@@ -1156,7 +1156,7 @@ sharedExamplesFor(@"a BTClient", ^(NSDictionary *data) {
                 XCTestExpectation *expectation = [self expectationWithDescription:@"Fetch client"];
                 [testThreeDSecureClient savePaypalAccount:@{ @"response_type": @"authorization_code",
                                                              @"response": @{ @"code": @"fake-paypal-auth-code" } }
-                                 applicationCorrelationID:nil
+                                         clientMetadataID:nil
                                                   success:^(BTPayPalPaymentMethod *paypalPaymentMethod) {
                                                       nonce = paypalPaymentMethod.nonce;
                                                       [expectation fulfill];
