@@ -398,7 +398,7 @@ describe(@"coinbase", ^{
 
 describe(@"merchant account id", ^{
     it(@"is optional", ^{
-        NSMutableDictionary *testConfiguration = BTConfigurationSpecTestConfiguration();
+        NSMutableDictionary *testConfiguration = [BTConfigurationSpecTestConfiguration() mutableCopy];
         [testConfiguration removeObjectForKey:BTConfigurationKeyMerchantAccountId];
         BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:testConfiguration] error:NULL];
         expect(configuration).to.beKindOf([BTConfiguration class]);
@@ -475,24 +475,24 @@ describe(@"PayPal", ^{
     });
     
     describe(@"isPayPalEnabled", ^{
-        __block BTClientToken *clientTokenPayPalDisabled;
-        beforeEach(^{
+        it(@"returns false if the paypalEnabled flag is set to False in the client Token", ^{
             NSDictionary *baseClaims = @{ BTClientTokenKeyAuthorizationFingerprint: @"auth_fingerprint",
                                           BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
                                           BTConfigurationKeyPayPalEnabled: @NO};
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:baseClaims] error:NULL];
             
-            clientTokenPayPalDisabled = [[BTClientToken alloc] initWithClientTokenString:[BTTestClientTokenFactory tokenWithVersion:2 overrides:baseClaims]
-                                                                                   error:NULL];
-        });
-        
-        it(@"returns false if the paypalEnabled flag is set to False in the client Token", ^{
+            
             expect(configuration.payPalEnabled).to.beFalsy();
         });
         
         it(@"returns true if the paypalEnabled flag is set to True in the client Token", ^{
+            NSDictionary *baseClaims = @{ BTClientTokenKeyAuthorizationFingerprint: @"auth_fingerprint",
+                                          BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
+                                          BTConfigurationKeyPayPalEnabled: @YES};
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:baseClaims] error:NULL];
+            
             expect(configuration.payPalEnabled).to.beTruthy();
         });
-        
     });
     
     describe(@"payPalMerchantName", ^{
