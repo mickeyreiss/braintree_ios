@@ -20,44 +20,44 @@ PODS:
   - AFNetworking/UIKit (2.5.3):
     - AFNetworking/NSURLConnection
     - AFNetworking/NSURLSession
-  - Braintree (3.8.0-rc3):
-    - Braintree/API (= 3.8.0-rc3)
-    - Braintree/Coinbase (= 3.8.0-rc3)
-    - Braintree/Drop-In (= 3.8.0-rc3)
-    - Braintree/Payments (= 3.8.0-rc3)
-    - Braintree/PayPal (= 3.8.0-rc3)
-    - Braintree/UI (= 3.8.0-rc3)
-    - Braintree/Venmo (= 3.8.0-rc3)
-  - Braintree/3D-Secure (3.8.0-rc3):
+  - Braintree (4.0.0-pre1):
+    - Braintree/API (= 4.0.0-pre1)
+    - Braintree/Coinbase (= 4.0.0-pre1)
+    - Braintree/Drop-In (= 4.0.0-pre1)
+    - Braintree/Payments (= 4.0.0-pre1)
+    - Braintree/PayPal (= 4.0.0-pre1)
+    - Braintree/UI (= 4.0.0-pre1)
+    - Braintree/Venmo (= 4.0.0-pre1)
+  - Braintree/3D-Secure (4.0.0-pre1):
     - Braintree/API
     - Braintree/Payments
     - Braintree/UI
-  - Braintree/API (3.8.0-rc3)
-  - Braintree/Apple-Pay (3.8.0-rc3):
+  - Braintree/API (4.0.0-pre1)
+  - Braintree/Apple-Pay (4.0.0-pre1):
     - Braintree/Payments
-  - Braintree/Coinbase (3.8.0-rc3):
+  - Braintree/Coinbase (4.0.0-pre1):
     - Braintree/API
     - coinbase-official/OAuth (~> 2.1.1)
-  - Braintree/Data (3.8.0-rc3):
+  - Braintree/Data (4.0.0-pre1):
     - Braintree/API
     - Braintree/PayPal
-  - Braintree/Drop-In (3.8.0-rc3):
+  - Braintree/Drop-In (4.0.0-pre1):
     - Braintree/API
     - Braintree/Coinbase
     - Braintree/Payments
     - Braintree/PayPal
     - Braintree/UI
     - Braintree/Venmo
-  - Braintree/Payments (3.8.0-rc3):
+  - Braintree/Payments (4.0.0-pre1):
     - Braintree/API
     - Braintree/Coinbase
     - Braintree/PayPal
     - Braintree/Venmo
-  - Braintree/PayPal (3.8.0-rc3):
+  - Braintree/PayPal (4.0.0-pre1):
     - Braintree/API
-  - Braintree/UI (3.8.0-rc3):
+  - Braintree/UI (4.0.0-pre1):
     - Braintree/API
-  - Braintree/Venmo (3.8.0-rc3):
+  - Braintree/Venmo (4.0.0-pre1):
     - Braintree/API
   - CardIO (5.0.3)
   - coinbase-official/OAuth (2.1.4)
@@ -102,7 +102,7 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   Braintree:
-    :path: .
+    :path: "."
   KIF:
     :branch: master
     :git: https://github.com/kif-framework/KIF.git
@@ -119,7 +119,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   AFNetworking: e1d86c2a96bb5d2e7408da36149806706ee122fe
-  Braintree: 768c913cf1d8f444c2a7a81bea3901c54fcbb4da
+  Braintree: 78119b18ca72263e74eeb287e6deab8c841cc39b
   CardIO: 3b0cc447bd0dd3d9552159365ba5c7b7f1db586a
   coinbase-official: 4ad3ac862840657b4184345eb84af8166ab2b04e
   Expecta: 8c507baf13211207b1e9d0a741480600e6b4ed15
