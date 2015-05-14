@@ -1,13 +1,16 @@
 //
 //  PayPalOneTouchRequest.h
 //
-//  Version 1.0.3
+//  Version 1.0.4
 //
 //  Copyright (c) 2015 PayPal Inc. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import "PayPalOneTouchCoreResult.h"
+
+/// Completion block for receiving the result of preflighting a request
+typedef void (^PayPalOneTouchRequestPreflightCompletionBlock) (PayPalOneTouchRequestTarget target);
 
 /// Completion block for receiving the result of performing a request
 typedef void (^PayPalOneTouchRequestCompletionBlock) (BOOL success, PayPalOneTouchRequestTarget target, NSError *error);
@@ -21,6 +24,17 @@ extern NSString *const PayPalEnvironmentMock;
 
 /// Base class for all OneTouch requests
 @interface PayPalOneTouchRequest : NSObject
+
+/// Optional preflight method, to determine in advance to which app we will switch when
+/// this request's performWithCompletionBlock: method is called.
+///
+/// @return PayPalOneTouchRequestTargetBrowser, PayPalOneTouchRequestTargetOnDeviceApplication, or
+///         PayPalOneTouchRequestTargetNone
+///
+/// @note As currently implemented, completionBlock will be called immediately.
+///       We use a completion block here to allow for future changes in implementation that might cause
+///       delays (such as time-consuming cryptographic operations, or server interactions).
+- (void)getTargetApp:(PayPalOneTouchRequestPreflightCompletionBlock)completionBlock;
 
 /// Ask the OneTouch library to carry out a request.
 /// Will app-switch to the PayPal mobile Wallet app if present, or to web browser otherwise.
@@ -38,7 +52,9 @@ extern NSString *const PayPalEnvironmentMock;
 /// All requests MUST include the app's Client ID, as obtained from developer.paypal.com
 @property (nonatomic, readonly) NSString *clientID;
 
-/// All requests MUST indicate the environment - `live`, `mock`, or `sandbox`; or else a stage indicated as `base-url:port`
+/// All requests MUST indicate the environment -
+/// PayPalEnvironmentProduction, PayPalEnvironmentMock, or PayPalEnvironmentSandbox;
+/// or else a stage indicated as `base-url:port`
 @property (nonatomic, readonly) NSString *environment;
 
 /// All requests MUST indicate the URL scheme to be used for returning to this app, following an app-switch
@@ -62,7 +78,8 @@ extern NSString *const PayPalEnvironmentMock;
 /// @param privacyURL The URL of the merchant's privacy policy
 /// @param agreementURL The URL of the merchant's user agreement
 /// @param clientID The app's Client ID, as obtained from developer.paypal.com
-/// @param environment `live`, `mock`, or `sandbox`; or else a stage indicated as `base-url:port`
+/// @param environment PayPalEnvironmentProduction, PayPalEnvironmentMock, or PayPalEnvironmentSandbox;
+///        or else a stage indicated as `base-url:port`
 /// @param callbackURLScheme The URL scheme to be used for returning to this app, following an app-switch
 + (instancetype)requestWithScopeValues:(NSSet *)scopeValues
                             privacyURL:(NSURL *)privacyURL
@@ -91,7 +108,8 @@ extern NSString *const PayPalEnvironmentMock;
 ///
 /// @param approvalURL Client has already created a payment on PayPal server; this is the resulting HATEOS ApprovalURL
 /// @param clientID The app's Client ID, as obtained from developer.paypal.com
-/// @param environment `live`, `mock`, or `sandbox`; or else a stage indicated as `base-url:port`
+/// @param environment PayPalEnvironmentProduction, PayPalEnvironmentMock, or PayPalEnvironmentSandbox;
+///        or else a stage indicated as `base-url:port`
 /// @param callbackURLScheme The URL scheme to be used for returning to this app, following an app-switch
 + (instancetype)requestWithApprovalURL:(NSURL *)approvalURL
                               clientID:(NSString *)clientID
