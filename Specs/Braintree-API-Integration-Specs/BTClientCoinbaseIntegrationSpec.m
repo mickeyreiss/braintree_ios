@@ -97,7 +97,8 @@ describe(@"saveCoinbaseAccount:storeInVault:success:failure:", ^{
             [invocation getArgument:&completionBlock atIndex:4];
             id response = [OCMockObject mockForClass:[BTHTTPResponse class]];
             [[[response stub] andReturnValue:@(YES)] isSuccess];
-            [[[response stub] andReturn:[BTAPIResponseParser parserWithDictionary:@{}]] object];
+            [[[response stub] andReturn:[
+BTJSON parserWithDictionary:@{}]] object];
             completionBlock(response, nil);
             [completionExpectation fulfill];
         }];

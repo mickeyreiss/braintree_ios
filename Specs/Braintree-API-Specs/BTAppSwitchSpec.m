@@ -1,4 +1,4 @@
-#import "BTAppSwitch.h"
+#import "BTAppSwitchHandler.h"
 
 #import "BTAppSwitching.h"
 
@@ -7,7 +7,7 @@ SpecBegin(BTAppSwitch)
 describe(@"handleReturnURL:sourceApplication:", ^{
     context(@"with no AppSwitching", ^{
         it(@"should return NO", ^{
-            BOOL handled = [[[BTAppSwitch alloc] init] handleReturnURL:[NSURL URLWithString:@"scheme://"] sourceApplication:@"com.yourcompany.hi"];
+            BOOL handled = [[[BTAppSwitchHandler alloc] init] handleReturnURL:[NSURL URLWithString:@"scheme://"] sourceApplication:@"com.yourcompany.hi"];
             expect(handled).to.beFalsy();
         });
     });
@@ -15,7 +15,7 @@ describe(@"handleReturnURL:sourceApplication:", ^{
     context(@"with one AppSwitcher that returns YES", ^{
         __block id happyAppSwitcher;
         beforeEach(^{
-            happyAppSwitcher = [OCMockObject mockForProtocol:@protocol(BTAppSwitching)];
+            happyAppSwitcher = [OCMockObject mockForProtocol:@protocol(BTAppSwitchHandling)];
             [[happyAppSwitcher stub] setReturnURLScheme:OCMOCK_ANY];
             [[[happyAppSwitcher stub] andReturn:[OCMockObject mockForProtocol:@protocol(BTAppSwitchingDelegate)]] delegate];
             [[[happyAppSwitcher stub] andReturnValue:@YES] canHandleReturnURL:OCMOCK_ANY sourceApplication:OCMOCK_ANY];
@@ -28,8 +28,8 @@ describe(@"handleReturnURL:sourceApplication:", ^{
         });
 
         it(@"should return YES", ^{
-            BTAppSwitch *appSwitch;
-            appSwitch = [[BTAppSwitch alloc] init];
+            BTAppSwitchHandler *appSwitch;
+            appSwitch = [[BTAppSwitchHandler alloc] init];
             [appSwitch addAppSwitching:happyAppSwitcher];
             BOOL handled = [appSwitch handleReturnURL:[NSURL new] sourceApplication:@""];
             expect(handled).to.beTruthy();

@@ -2,6 +2,21 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 workspace 'Braintree.xcworkspace'
 
+def all_braintree_subspecs
+  [
+    'Apple-Pay',
+    'Data',
+    'Credit-Cards',
+    'Data',
+    'Credit-Cards/3D-Secure',
+    'Coinbase',
+    'PayPal',
+    'Venmo',
+    'UI',
+    'Drop-In'
+  ]
+end
+
 target 'Tests' do
   link_with 'Braintree-Acceptance-Specs',
             'Braintree-UI-Specs',
@@ -22,11 +37,7 @@ target 'Tests' do
 end
 
 target 'Braintree-Demo' do
-  pod 'Braintree', :path => '.'
-  pod 'Braintree/Apple-Pay', :path => '.'
-  pod 'Braintree/Data', :path => '.'
-  pod 'Braintree/3D-Secure', :path => '.'
-  pod 'Braintree/Coinbase', :path => '.'
+  all_braintree_subspecs.map { |subspec| pod "Braintree/#{subspec}", :path => '.' }
   pod 'HockeySDK'
   pod 'AFNetworking', '~> 2.2'
   pod 'CardIO'
@@ -42,11 +53,7 @@ target 'Logic-Tests' do
             'Braintree-API-Integration-Specs',
             'Braintree-Payments-Specs',
             'Braintree-Specs'
-  pod 'Braintree', :path => '.'
-  pod 'Braintree/Apple-Pay', :path => '.'
-  pod 'Braintree/Data', :path => '.'
-  pod 'Braintree/3D-Secure', :path => '.'
-  pod 'Braintree/Coinbase', :path => '.'
+  all_braintree_subspecs.map { |subspec| pod "Braintree/#{subspec}", :path => '.' }
   pod 'Specta'
   pod 'Expecta', '~> 0.3.0'
   pod 'OCMock', '~> 3.1'

@@ -1,4 +1,4 @@
-#import <Braintree/BTData.h>
+#import "BTDataCollector.h"
 
 #import "BraintreeDemoBraintreeDataViewController.h"
 
@@ -7,10 +7,10 @@
 
 #import <PureLayout/PureLayout.h>
 
-@interface BraintreeDemoBraintreeDataViewController () <BTDataDelegate>
+@interface BraintreeDemoBraintreeDataViewController () <BTDataCollectorDelegate>
 
-/// Retain BTData for entire lifecycle of view controller
-@property (nonatomic, strong) BTData *data;
+/// Retain BTDataCollector for entire lifecycle of view controller
+@property (nonatomic, strong) BTDataCollector *data;
 
 @property (nonatomic, strong) BTClient *client;
 @end
@@ -29,10 +29,10 @@
 {
     [super viewDidLoad];
 
-    self.title = @"BTData Fraud Protection";
+    self.title = @"BTDataCollector Fraud Protection";
 
     UIButton *initializeButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [initializeButton setTitle:@"Initialize BTData" forState:UIControlStateNormal];
+    [initializeButton setTitle:@"Initialize BTDataCollector" forState:UIControlStateNormal];
     [initializeButton addTarget:self action:@selector(tappedInitialize) forControlEvents:UIControlEventTouchUpInside];
 
     UIButton *collectButton = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -58,7 +58,7 @@
 
 - (IBAction)tappedInitialize
 {
-    self.data = [[BTData alloc] initWithClient:self.client
+    self.data = [[BTDataCollector alloc] initWithClient:self.client
                                    environment:BTDataEnvironmentSandbox];
     self.data.delegate = self;
     self.progressBlock([NSString stringWithFormat:@"Initialized data %@", self.data]);
@@ -76,18 +76,18 @@
     [locationManager requestWhenInUseAuthorization];
 }
 
-- (void)btDataDidStartCollectingData:(__unused BTData *)data
+- (void)btDataDidStartCollectingData:(__unused BTDataCollector *)data
 {
-    self.progressBlock(@"BTData didStartCollectingData");
+    self.progressBlock(@"BTDataCollector didStartCollectingData");
 
 }
 
-- (void)btDataDidComplete:(__unused BTData *)data
+- (void)btDataDidComplete:(__unused BTDataCollector *)data
 {
-    self.progressBlock(@"BTData didComplete");
+    self.progressBlock(@"BTDataCollector didComplete");
 }
 
-- (void)btData:(__unused BTData *)data didFailWithErrorCode:(__unused int)errorCode error:(NSError *)error
+- (void)btData:(__unused BTDataCollector *)data didFailWithErrorCode:(__unused int)errorCode error:(NSError *)error
 {
     self.progressBlock(error.localizedDescription);
 }

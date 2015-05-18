@@ -4,7 +4,7 @@
 #import "UIColor+BTUI.h"
 #import "BTThreeDSecureResponse.h"
 #import "BTWebViewController.h"
-#import "BTAPIResponseParser.h"
+#import "BTJSON.h"
 #import "BTClientTokenBooleanValueTransformer.h"
 #import "BTClientPaymentMethodValueTransformer.h"
 
@@ -81,11 +81,11 @@
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
     if (navigationType == UIWebViewNavigationTypeFormSubmitted && [request.URL.path rangeOfString:@"authentication_complete_frame"].location != NSNotFound) {
         NSString *rawAuthResponse = [BTURLUtils dictionaryForQueryString:request.URL.query][@"auth_response"];
-        BTAPIResponseParser *authResponseParser = ({
+        BTJSON *authResponseParser = ({
             NSDictionary *authResponseDictionary = [NSJSONSerialization JSONObjectWithData:[rawAuthResponse dataUsingEncoding:NSUTF8StringEncoding]
                                                                                    options:0
                                                                                      error:NULL];
-            [BTAPIResponseParser parserWithDictionary:authResponseDictionary];
+            [BTJSON JSONWithDictionary:authResponseDictionary];
         });
 
         BTThreeDSecureResponse *authResponse = [[BTThreeDSecureResponse alloc] init];

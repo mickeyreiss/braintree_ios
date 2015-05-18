@@ -1,11 +1,11 @@
 #import "DeviceCollectorSDK.h"
-#import "BTData.h"
+#import "BTDataCollector.h"
 #import "BTClientSpecHelper.h"
 #import "BTTestClientTokenFactory.h"
 #import "BTConfiguration.h"
 #import "PayPalOneTouchCore.h"
 
-@interface TestDataDelegate : NSObject <BTDataDelegate>
+@interface TestDataDelegate : NSObject <BTDataCollectorDelegate>
 @property (nonatomic, strong) NSError *error;
 @property (nonatomic, assign) int errorCode;
 @property (nonatomic, copy) void (^didStartBlock)(void);
@@ -23,15 +23,15 @@
     return self;
 }
 
-- (void)btData:(BTData *)data didFailWithErrorCode:(int)errorCode error:(NSError *)error {
+- (void)btData:(BTDataCollector *)data didFailWithErrorCode:(int)errorCode error:(NSError *)error {
     @throw error;
 }
 
-- (void)btDataDidStartCollectingData:(BTData *)data {
+- (void)btDataDidStartCollectingData:(BTDataCollector *)data {
     if (self.didStartBlock) self.didStartBlock();
 }
 
-- (void)btDataDidComplete:(BTData *)data {
+- (void)btDataDidComplete:(BTDataCollector *)data {
     if (self.didCompleteBlock) self.didCompleteBlock();
 }
 @end
@@ -72,7 +72,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
             TestDataDelegate *delegate = [[TestDataDelegate alloc] init];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            BTData *data = [BTData defaultDataForEnvironment:env delegate:delegate];
+            BTDataCollector *data = [BTDataCollector defaultDataForEnvironment:env delegate:delegate];
 #pragma clang diagnostic pop
 
             expect(data).to.beNil();
@@ -94,7 +94,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
             
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-            BTData *data = [BTData defaultDataForEnvironment:env delegate:delegate];
+            BTDataCollector *data = [BTDataCollector defaultDataForEnvironment:env delegate:delegate];
 
             [data collect];
 #pragma clang diagnostic pop
@@ -117,7 +117,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
             } didComplete:^{
                 [didCompleteExpectation fulfill];
             }];
-            BTData *data = [[BTData alloc] initWithClient:client environment:env];
+            BTDataCollector *data = [[BTDataCollector alloc] initWithClient:client environment:env];
             data.delegate = delegate;
             [data setFraudMerchantId:@"600000"];
             
@@ -144,7 +144,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
 
             BTClient *client = [BTClientSpecHelper asyncClientForTestCase:self withOverrides:@{ BTConfigurationKeyPayPalEnabled: @NO, BTConfigurationKeyPayPal: [NSNull null] }];
 
-            BTData *data = [[BTData alloc] initWithClient:client environment:env];
+            BTDataCollector *data = [[BTDataCollector alloc] initWithClient:client environment:env];
             [data setFraudMerchantId:@"600000"];
 
             NSString *deviceDataString = [data collectDeviceData];
@@ -164,7 +164,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
             id stubClient = [OCMockObject mockForClass:[PayPalOneTouchCore class]];
             [[[stubClient stub] classMethod] clientMetadataID];
 
-            BTData *data = [[BTData alloc] initWithClient:client environment:env];
+            BTDataCollector *data = [[BTDataCollector alloc] initWithClient:client environment:env];
             [data setFraudMerchantId:@"600000"];
 
             NSString *deviceDataString = [data collectDeviceData];
@@ -177,7 +177,7 @@ describe(@"defaultDataForEnvironment:delegate:", ^{
         });
 
         it(@"returns nil if BTClient is nil", ^{
-            BTData *data = [[BTData alloc] initWithClient:nil environment:BTDataEnvironmentProduction];
+            BTDataCollector *data = [[BTDataCollector alloc] initWithClient:nil environment:BTDataEnvironmentProduction];
             expect(data).to.beNil();
         });
     });

@@ -1,9 +1,9 @@
-#import "BTAPIResponseParser.h"
+#import "BTJSON.h"
 
 SpecBegin(BTAPIResponseParser)
 
 context(@"type safe value parsing", ^{
-    __block BTAPIResponseParser *testParser;
+    __block BTJSON *testParser;
     
     beforeEach(^{
         NSData *json = [@"{\
@@ -22,9 +22,9 @@ context(@"type safe value parsing", ^{
                         \"aFalse\": false\
                         }" dataUsingEncoding:NSUTF8StringEncoding];
         NSError *jsonFixtureError;
-        testParser = [BTAPIResponseParser parserWithDictionary:[NSJSONSerialization JSONObjectWithData:json
-                                                                                               options:0
-                                                                                                 error:&jsonFixtureError]];
+        testParser = [BTJSON JSONWithDictionary:[NSJSONSerialization JSONObjectWithData:json
+                                                                                options:0
+                                                                                  error:&jsonFixtureError]];
         NSAssert(jsonFixtureError == nil, @"Failed to parse fixture JSON: %@", jsonFixtureError);
     });
     
@@ -112,7 +112,7 @@ context(@"type safe value parsing", ^{
     context(@"nested resources", ^{
         describe(@"responseParserForKey:", ^{
             it(@"returns the dictionary at the given key as another response parser object", ^{
-                BTAPIResponseParser *parser = [testParser responseParserForKey:@"aLookupDictionary"];
+                BTJSON *parser = [testParser responseParserForKey:@"aLookupDictionary"];
                 expect([[parser responseParserForKey:@"foo"] stringForKey:@"definition"]).to.equal(@"A meaningless word");
             });
             
@@ -189,16 +189,16 @@ context(@"type safe value parsing", ^{
 describe(@"isEqual:", ^{
     it(@"returns true for two parsers initialized with equal dictionaries", ^{
         NSDictionary *dictionary = @{ @"foo": @"bar" };
-        BTAPIResponseParser *parser1 = [BTAPIResponseParser parserWithDictionary:dictionary.copy];
-        BTAPIResponseParser *parser2 = [BTAPIResponseParser parserWithDictionary:dictionary.copy];
+        BTJSON *parser1 = [BTJSON JSONWithDictionary:dictionary.copy];
+        BTJSON *parser2 = [BTJSON JSONWithDictionary:dictionary.copy];
 
         expect(parser1).notTo.beIdenticalTo(parser2);
         expect(parser1).to.equal(parser2);
     });
 
     it(@"returns false for distinct parsers", ^{
-        BTAPIResponseParser *parser1 = [BTAPIResponseParser parserWithDictionary:@{ @"name": @"parser1" }];
-        BTAPIResponseParser *parser2 = [BTAPIResponseParser parserWithDictionary:@{ @"name": @"parser2" }];
+        BTJSON *parser1 = [BTJSON JSONWithDictionary:@{@"name" : @"parser1"}];
+        BTJSON *parser2 = [BTJSON JSONWithDictionary:@{@"name" : @"parser2"}];
 
         expect(parser1).notTo.beIdenticalTo(parser2);
         expect(parser1).notTo.equal(parser2);
@@ -208,7 +208,7 @@ describe(@"isEqual:", ^{
 describe(@"NSCoding", ^{
     it(@"roundtrips a response parser", ^{
         NSDictionary *dictionary = @{ @"key": @"value" };
-        BTAPIResponseParser *parser1 = [BTAPIResponseParser parserWithDictionary:dictionary.copy];
+        BTJSON *parser1 = [BTJSON JSONWithDictionary:dictionary.copy];
 
         NSMutableData *data = [NSMutableData data];
         NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
@@ -216,7 +216,7 @@ describe(@"NSCoding", ^{
         [archiver finishEncoding];
 
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data.copy];
-        BTAPIResponseParser *parser2 = [[BTAPIResponseParser alloc] initWithCoder:unarchiver];
+        BTJSON *parser2 = [[BTJSON alloc] initWithCoder:unarchiver];
         [unarchiver finishDecoding];
 
         expect(parser1).notTo.beIdenticalTo(parser2);

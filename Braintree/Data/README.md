@@ -1,42 +1,58 @@
-# Braintree Data - Advanced Fraud via Kount
+# Braintree Data - Advanced Fraud Protection
 
 ## Overview
 
-`Braintree/Data` is our advanced fraud solution that is powered by `BTData`, PayPal and Kount. This system enables you to collect device data and correlate it with a session identifier on your server.
+`Braintree/Data` is our advanced fraud solution that is powered by `BTDataCollector`, PayPal and Kount. This system enables you to collect device data and correlate it with a session identifier on your server.
 
-By default, we suggest you utilize the default merchant credentials embedded in `[[BTData alloc] initWithClient:client environment:BTDataEnvironmentProduction]`.
+For credit cards, we have partnered with Kount. By default, we utilized an aggregated set of credentials and fraud rules.
 
-For direct Fraud Integration, please see [our documentation](https://developers.braintreepayments.com/ios/guides/fraud-tools#direct-fraud-tool-integration) or [contact our accounts team](accounts@braintreepayments.com).
+It is also possible to use your own Fraud Merchant ID and collector url. For more information about theKount Direct fraud integration, please see [our documentation](https://developers.braintreepayments.com/ios/guides/fraud-tools#direct-fraud-tool-integration) or [contact our accounts team](accounts@braintreepayments.com).
 
-**Note:** Use of `Braintree/Data` and `BTData` is optional. 
-
-**Note:** `Braintree/Data` no longer contains references to Apple's IDFA.
+For PayPal transactions, we automatically include the appropriate client metadata when tokenizing an account for saving it in the vault. For enhanced fraud protection, you should include device data in the background whenever you create transaction from a PayPal account that is saved in the vault.
 
 ### Usage
 
-First, add `pod "Braintree/Data"` to your `Podfile`.
-
-#### Default
-
-Please follow these steps to integrate Braintree Data in your app:
-
-1. Initialize `BTData` using the convenience constructor `initWithClient:environment:` in your AppDelegate.
+If you haven't already, integrate the Braintree SDK.
     * See [our documentation](https://developers.braintreepayments.com/ios/start/hello-client) for instructions on initializing BTClient
-    * Be sure to pass the current Braintree environment, and remember to change this value before shipping to the app store.
 
-2. Optionally, set a delegate to receive lifecycle notifications.
+First, add the `Braintree/Data` dependencies to your `Podfile`.
 
-2. Retain your `BTData` instance for your entire application lifecycle.
+```ruby
+pod "Braintree/Data"
+```
 
-3. Invoke `collect` (to generate a session id) or `collect:` (to provide a session id) as often as is needed. This will perform a device fingerprint and asynchronously send this data to Kount. This operation is relatively expensive. We recommend that you do this seldom and avoid interrupting your app startup with this call.
+Note that you can also use `Braintree/Data/Kount` or `Braintree/Data/PayPal` if you would like to omit unneeded dependencies.
 
-#### Direct Fraud Tool Integration
+Next, follow these steps to collect device metadata:
+    
+1. Import `BTDataCollector` in your payment view controller:
 
-Direct fraud tool integration is similar to default.
+```objectivec
+- (void)viewDidLoad {
+  [super viewDidLoad];
+  self.data = [[BTDataCollector alloc] initWithClient:self.client];
+  
+  // Optionally, set a delegate to receive lifecycle notifications.
+  self.data.delegate = self;
+```
 
-After initializing `BTData` following the instructions above, invoke `setCollectorUrl:` and/or `setKountMerchantId:` with the appropriate data.
+For best results, you should reuse your instance of `BTClient` and perform this initialization at a point when it would not cause a delay in your checkout UX. Please retain your `BTDataCollector` instance for your view controller's lifecycle.
 
-Please contact our account management team for more information.
+3. Invoke `collect` (to generate a session id) as often as is needed. This will perform a device fingerprint and asynchronously send this data to Kount. This operation is relatively expensive. We recommend that you do this seldom and avoid interrupting your app startup with this call.
+
+```objectivec
+  NSString *deviceData = [self.data collectDeviceData];
+  // Send deviceData to your server along with the payment method nonce.
+}
+```
+
+#### Kount Direct
+
+Kount Direct is for merchants with specific fraud prevention needs.
+
+After initializing `BTDataCollector` following the instructions above, invoke `setCollectorUrl:` and/or `setKountMerchantId:` with the appropriate data.
+
+Please contact our [accounts](accounts@getbraintree.com) team for more information.
 
 ### Server-Side Integration
 
@@ -54,6 +70,6 @@ result = Braintree::Transaction.sale(
     :expiration_date => params["credit_card_expiration_date"],
     :cvv => params["credit_card_cvv"]
   },
-  :device_session_id => params["BRAINTREE_DATA_SESSION_ID"]
+  :device_data => params["BRAINTREE_DEVICE_DATA"]
 )
 ```

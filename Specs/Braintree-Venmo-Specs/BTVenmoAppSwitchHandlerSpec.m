@@ -1,6 +1,6 @@
 @import UIKit;
 
-#import "BTVenmoAppSwitchHandler.h"
+#import "BTVenmoDriver.h"
 #import "BTVenmoAppSwitchHandler_Internal.h"
 #import "BTVenmoAppSwitchReturnURL.h"
 #import "BTVenmoAppSwitchRequestURL.h"
@@ -12,18 +12,18 @@ SpecBegin(BTVenmoAppSwitchHandler)
 describe(@"sharedHandler", ^{
 
     it(@"returns one and only one instance", ^{
-        expect([BTVenmoAppSwitchHandler sharedHandler]).to.beIdenticalTo([BTVenmoAppSwitchHandler sharedHandler]);
+        expect([BTVenmoDriver sharedHandler]).to.beIdenticalTo([BTVenmoDriver sharedHandler]);
     });
 
 });
 
 describe(@"An instance", ^{
-    __block BTVenmoAppSwitchHandler *handler;
+    __block BTVenmoDriver *handler;
     __block id client;
     __block id delegate;
 
     beforeEach(^{
-        handler = [[BTVenmoAppSwitchHandler alloc] init];
+        handler = [[BTVenmoDriver alloc] init];
         client = [OCMockObject mockForClass:[BTClient class]];
         delegate = [OCMockObject mockForProtocol:@protocol(BTAppSwitchingDelegate)];
 

@@ -8,7 +8,7 @@
 #import "BTClient_Internal.h"
 
 #import "BTPayPalAppSwitchHandler.h"
-#import "BTVenmoAppSwitchHandler.h"
+#import "BTVenmoDriver.h"
 
 #import "BTCoinbase.h"
 #import "CoinbaseOAuth.h"
@@ -219,7 +219,7 @@ describe(@"createPaymentMethod:", ^{
         __block id venmoAppSwitchHandler;
 
         beforeEach(^{
-            venmoAppSwitchHandler = [OCMockObject mockForClass:[BTVenmoAppSwitchHandler class]];
+            venmoAppSwitchHandler = [OCMockObject mockForClass:[BTVenmoDriver class]];
             [[[venmoAppSwitchHandler stub] andReturn:venmoAppSwitchHandler] sharedHandler];
 
             provider.delegate = delegate;

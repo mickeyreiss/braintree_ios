@@ -60,7 +60,7 @@ context(@"valid configuration", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[@"merchantAccountId"] = @"a_merchant_account_id";
         NSError *error;
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:&error];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:&error];
         expect(error).to.beNil();
         
         expect(configuration.clientApiURL).to.equal([NSURL URLWithString:@"https://api.example.com:443/merchants/a_merchant_id/client_api"]);
@@ -80,7 +80,7 @@ context(@"valid configuration", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[BTConfigurationKeyClientApiURL] = NSNull.null;
         NSError *error;
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:&error];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:&error];
         expect(configuration).to.beNil();
         expect(error.domain).to.equal(BTBraintreeAPIErrorDomain);
         expect([error localizedDescription]).to.contain(@"client api url");
@@ -92,7 +92,7 @@ context(@"edge cases", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[BTConfigurationKeyClientApiURL] = @"";
         NSError *error;
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:&error];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:&error];
         
         expect(configuration).to.beNil();
         expect(error.domain).to.equal(BTBraintreeAPIErrorDomain);
@@ -104,7 +104,7 @@ context(@"edge cases", ^{
 describe(@"analytics enabled", ^{
     it(@"returns true when a valid analytics URL is included in configuration", ^{
         NSError *error;
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:BTConfigurationSpecTestConfiguration()] error:&error];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:BTConfigurationSpecTestConfiguration()] error:&error];
         
         expect(error).to.beNil();
         expect(configuration.analyticsEnabled).to.beTruthy();
@@ -115,7 +115,7 @@ describe(@"analytics enabled", ^{
         dict[BTConfigurationKeyAnalytics] = NSNull.null;
         
         NSError *error;
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:&error];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:&error];
         
         expect(error).to.beNil();
         expect(configuration.analyticsEnabled).to.beFalsy();
@@ -126,7 +126,7 @@ describe(@"coding", ^{
     it(@"roundtrips the configuration", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[BTConfigurationKeyClientApiURL] = @"https://client.api.example.com:6789/merchants/MERCHANT_ID/client_api";
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
         
         NSMutableData *data = [NSMutableData data];
         NSKeyedArchiver *coder = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
@@ -144,8 +144,8 @@ describe(@"isEqual:", ^{
     it(@"returns YES when configurations are identical", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[BTConfigurationKeyClientApiURL] = @"https://test.api.url/for_testing";
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
-        BTConfiguration *configuration2 = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
+        BTConfiguration *configuration2 = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
         expect(configuration).notTo.beNil();
         expect(configuration).to.equal(configuration2);
     });
@@ -153,10 +153,10 @@ describe(@"isEqual:", ^{
     it(@"returns NO when tokens are different in meaningful ways", ^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict[BTConfigurationKeyClientApiURL] = @"https://test.api.url/for_testing";
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
         NSMutableDictionary *dict2 = [BTConfigurationSpecTestConfiguration() mutableCopy];
         dict2[BTConfigurationKeyClientApiURL] = @"https://different.test.url/for_different_testing";
-        BTConfiguration *configuration2 = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict2] error:NULL];
+        BTConfiguration *configuration2 = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict2] error:NULL];
         expect(configuration).notTo.beNil();
         expect(configuration).notTo.equal(configuration2);
         
@@ -165,7 +165,7 @@ describe(@"isEqual:", ^{
         expect(configuration).notTo.beNil();
         expect(configuration).notTo.equal(configuration2);
         
-        BTConfiguration *configuration3 = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        BTConfiguration *configuration3 = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
         expect(configuration3).notTo.beNil();
         expect(configuration3).notTo.equal(configuration2);
     });
@@ -175,7 +175,7 @@ describe(@"copy", ^{
     __block BTConfiguration *configuration;
     beforeEach(^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
-        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
     });
     
     it(@"returns a different instance", ^{
@@ -197,7 +197,7 @@ describe(@"PayPal", ^{
     
     beforeEach(^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
-        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
     });
     
     describe(@"payPalClientIdentifier", ^{
@@ -227,7 +227,7 @@ describe(@"PayPal", ^{
                                                    //BTClientTokenKeyAuthorizationFingerprint: @"auth_fingerprint",
                                                    BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
                                                    BTConfigurationKeyPayPalEnabled: @NO }];
-            configurationPayPalDisabled = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+            configurationPayPalDisabled = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
         });
         
         it(@"returns false if the paypalEnabled flag is set to False in the configuration", ^{
@@ -274,7 +274,7 @@ describe(@"PayPal", ^{
                 
                 [configurationDict setValuesForKeysWithDictionary:@{ BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
                                                                      BTConfigurationKeyPayPalEnabled: @NO }];
-                configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:configurationDict] error:NULL];
+                configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:configurationDict] error:NULL];
                 
                 defaultUserAgreementURL = [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantUserAgreementUrl];
                 defaultPrivacyPolicyURL = [NSURL URLWithString:BTConfigurationPayPalNonLiveDefaultValueMerchantPrivacyPolicyUrl];
@@ -298,7 +298,7 @@ describe(@"PayPal", ^{
                 beforeEach(^{
                     payPalDict[BTConfigurationKeyPayPalEnvironment] = BTConfigurationPayPalEnvironmentOffline;
                     configurationDict[BTConfigurationKeyPayPal] = payPalDict;
-                    configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:configurationDict] error:NULL];
+                    configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:configurationDict] error:NULL];
                 });
                 
                 it(@"returns a PayPal configuration object with an offline default merchant name if not specified in the configuration", ^{
@@ -318,7 +318,7 @@ describe(@"PayPal", ^{
                 beforeEach(^{
                     payPalDict[BTConfigurationKeyPayPalEnvironment] = BTConfigurationPayPalEnvironmentCustom;
                     configurationDict[BTConfigurationKeyPayPal] = payPalDict;
-                    configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:configurationDict] error:NULL];
+                    configurationMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:configurationDict] error:NULL];
                 });
                 
                 it(@"returns a PayPal configuration object with an offline default merchant name if not specified in the configuration", ^{
@@ -354,7 +354,7 @@ describe(@"coinbase", ^{
     __block BTConfiguration *configuration;
     beforeEach(^{
         NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
-        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+        configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
     });
     
     describe(@"coinbaseEnabled", ^{
@@ -364,7 +364,7 @@ describe(@"coinbase", ^{
         it(@"is NO when coinbaseConfiguration is missing", ^{
             NSMutableDictionary *dict = [BTConfigurationSpecTestConfiguration() mutableCopy];
             [dict removeObjectForKey:BTConfigurationKeyCoinbase];
-            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
             expect(configuration.coinbaseEnabled).to.equal(NO);
         });
         it(@"is NO when coinbaseClientId is missing", ^{
@@ -372,7 +372,7 @@ describe(@"coinbase", ^{
             NSMutableDictionary *coinbaseDict = [dict[BTConfigurationKeyCoinbase] mutableCopy];
             [coinbaseDict removeObjectForKey:BTConfigurationKeyCoinbaseClientId];
             dict[BTConfigurationKeyCoinbase] = coinbaseDict;
-            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
             expect(configuration.coinbaseEnabled).to.equal(NO);
         });
         it(@"is NO when coinbaseScope is missing", ^{
@@ -380,7 +380,7 @@ describe(@"coinbase", ^{
             NSMutableDictionary *coinbaseDict = [dict[BTConfigurationKeyCoinbase] mutableCopy];
             [coinbaseDict removeObjectForKey:BTConfigurationKeyCoinbaseScope];
             dict[BTConfigurationKeyCoinbase] = coinbaseDict;
-            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:dict] error:NULL];
+            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:dict] error:NULL];
             expect(configuration.coinbaseEnabled).to.equal(NO);
         });
         // We don't check for coinbaseMerchantAccount because it may not always be required,
@@ -406,7 +406,7 @@ describe(@"merchant account id", ^{
     it(@"is optional", ^{
         NSMutableDictionary *testConfiguration = [BTConfigurationSpecTestConfiguration() mutableCopy];
         [testConfiguration removeObjectForKey:BTConfigurationKeyMerchantAccountId];
-        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:testConfiguration] error:NULL];
+        BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:testConfiguration] error:NULL];
         expect(configuration).to.beKindOf([BTConfiguration class]);
         expect(configuration.merchantAccountId).to.beNil();
     });
@@ -424,21 +424,21 @@ describe(@"venmo", ^{
         it(@"returns nil if a 'venmo' key is not present", ^{
             NSMutableDictionary *venmoNotPresentClaims = [claims mutableCopy];
             venmoNotPresentClaims[@"venmo"] = [NSNull null];
-            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:venmoNotPresentClaims] error:NULL];
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:venmoNotPresentClaims] error:NULL];
             expect(configuration.btVenmo_status).to.beNil();
         });
         
         it(@"returns the value of the 'venmo' key", ^{
             NSMutableDictionary *mutableClaims = [claims mutableCopy];
             mutableClaims[@"venmo"] = @"foo";
-            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:mutableClaims] error:NULL];
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:mutableClaims] error:NULL];
             expect(configuration.btVenmo_status).to.equal(@"foo");
         });
         
         it(@"returns nil if 'venmo' key is not a string", ^{
             NSMutableDictionary *mutableClaims = [claims mutableCopy];
             mutableClaims[@"venmo"] = @{@"not": @"a string"};
-            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:mutableClaims] error:NULL];
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:mutableClaims] error:NULL];
             expect(configuration.btVenmo_status).to.beNil();
         });
     });
@@ -463,7 +463,7 @@ describe(@"PayPal", ^{
                                           BTConfigurationKeyPayPal: paypalClaims};
             
             mutableClaims = [baseClaims mutableCopy];
-            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:mutableClaims] error:NULL];
+            configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:mutableClaims] error:NULL];
             done();
         });
     });
@@ -485,7 +485,7 @@ describe(@"PayPal", ^{
             NSDictionary *baseClaims = @{ BTClientTokenKeyAuthorizationFingerprint: @"auth_fingerprint",
                                           BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
                                           BTConfigurationKeyPayPalEnabled: @NO};
-            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:baseClaims] error:NULL];
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:baseClaims] error:NULL];
             
             
             expect(configuration.payPalEnabled).to.beFalsy();
@@ -495,7 +495,7 @@ describe(@"PayPal", ^{
             NSDictionary *baseClaims = @{ BTClientTokenKeyAuthorizationFingerprint: @"auth_fingerprint",
                                           BTConfigurationKeyClientApiURL: @"http://gateway.example.com/client_api",
                                           BTConfigurationKeyPayPalEnabled: @YES};
-            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:baseClaims] error:NULL];
+            BTConfiguration *configuration = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:baseClaims] error:NULL];
             
             expect(configuration.payPalEnabled).to.beTruthy();
         });
@@ -527,7 +527,7 @@ describe(@"PayPal", ^{
                 [mutableClaims[BTConfigurationKeyPayPal] removeObjectForKey:BTConfigurationKeyPayPalMerchantPrivacyPolicyUrl];
                 [mutableClaims[BTConfigurationKeyPayPal] removeObjectForKey:BTConfigurationKeyPayPalMerchantUserAgreementUrl];
                 
-                clientTokenMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:mutableClaims] error:nil];
+                clientTokenMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:mutableClaims] error:nil];
             });
             
             describe(@"live environment", ^{
@@ -547,7 +547,7 @@ describe(@"PayPal", ^{
             describe(@"offline environment", ^{
                 beforeEach(^{
                     mutableClaims[BTConfigurationKeyPayPal][BTConfigurationKeyPayPalEnvironment] = @"offline";
-                    clientTokenMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTAPIResponseParser parserWithDictionary:mutableClaims] error:nil];
+                    clientTokenMissingFields = [[BTConfiguration alloc] initWithResponseParser:[BTJSON JSONWithDictionary:mutableClaims] error:nil];
                 });
             });
         });

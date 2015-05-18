@@ -21,44 +21,42 @@ PODS:
     - AFNetworking/NSURLConnection
     - AFNetworking/NSURLSession
   - Braintree (4.0.0-pre1):
-    - Braintree/API (= 4.0.0-pre1)
-    - Braintree/Coinbase (= 4.0.0-pre1)
+    - Braintree/Credit-Cards (= 4.0.0-pre1)
     - Braintree/Drop-In (= 4.0.0-pre1)
-    - Braintree/Payments (= 4.0.0-pre1)
     - Braintree/PayPal (= 4.0.0-pre1)
-    - Braintree/UI (= 4.0.0-pre1)
-    - Braintree/Venmo (= 4.0.0-pre1)
-  - Braintree/3D-Secure (4.0.0-pre1):
-    - Braintree/API
-    - Braintree/Payments
-    - Braintree/UI
-  - Braintree/API (4.0.0-pre1)
   - Braintree/Apple-Pay (4.0.0-pre1):
-    - Braintree/Payments
+    - Braintree/Core
   - Braintree/Coinbase (4.0.0-pre1):
-    - Braintree/API
+    - Braintree/Core
     - coinbase-official/OAuth (~> 2.1.1)
+  - Braintree/Core (4.0.0-pre1)
+  - Braintree/Credit-Cards (4.0.0-pre1):
+    - Braintree/Core
+    - Braintree/Credit-Cards/3D-Secure (= 4.0.0-pre1)
+    - Braintree/Credit-Cards/CSE (= 4.0.0-pre1)
+  - Braintree/Credit-Cards/3D-Secure (4.0.0-pre1):
+    - Braintree/Core
+    - Braintree/UI
+  - Braintree/Credit-Cards/CSE (4.0.0-pre1):
+    - Braintree/Core
   - Braintree/Data (4.0.0-pre1):
-    - Braintree/API
+    - Braintree/Data/Kount (= 4.0.0-pre1)
+    - Braintree/Data/PayPal (= 4.0.0-pre1)
+  - Braintree/Data/Kount (4.0.0-pre1)
+  - Braintree/Data/PayPal (4.0.0-pre1):
     - Braintree/PayPal
   - Braintree/Drop-In (4.0.0-pre1):
-    - Braintree/API
     - Braintree/Coinbase
-    - Braintree/Payments
+    - Braintree/Core
     - Braintree/PayPal
     - Braintree/UI
     - Braintree/Venmo
-  - Braintree/Payments (4.0.0-pre1):
-    - Braintree/API
-    - Braintree/Coinbase
-    - Braintree/PayPal
-    - Braintree/Venmo
   - Braintree/PayPal (4.0.0-pre1):
-    - Braintree/API
+    - Braintree/Core
   - Braintree/UI (4.0.0-pre1):
-    - Braintree/API
+    - Braintree/Core
   - Braintree/Venmo (4.0.0-pre1):
-    - Braintree/API
+    - Braintree/Core
   - CardIO (5.0.3)
   - coinbase-official/OAuth (2.1.4)
   - Expecta (0.3.2)
@@ -83,10 +81,15 @@ PODS:
 DEPENDENCIES:
   - AFNetworking (~> 2.2)
   - Braintree (from `.`)
-  - Braintree/3D-Secure (from `.`)
   - Braintree/Apple-Pay (from `.`)
   - Braintree/Coinbase (from `.`)
+  - Braintree/Credit-Cards (from `.`)
+  - Braintree/Credit-Cards/3D-Secure (from `.`)
   - Braintree/Data (from `.`)
+  - Braintree/Drop-In (from `.`)
+  - Braintree/PayPal (from `.`)
+  - Braintree/UI (from `.`)
+  - Braintree/Venmo (from `.`)
   - CardIO
   - Expecta (~> 0.3.0)
   - FLEX
@@ -121,7 +124,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   AFNetworking: e1d86c2a96bb5d2e7408da36149806706ee122fe
-  Braintree: 78119b18ca72263e74eeb287e6deab8c841cc39b
+  Braintree: 44a85d6a5fe04d5933ccae7ea345d1cfe9cd1f12
   CardIO: 3b0cc447bd0dd3d9552159365ba5c7b7f1db586a
   coinbase-official: 4ad3ac862840657b4184345eb84af8166ab2b04e
   Expecta: 8c507baf13211207b1e9d0a741480600e6b4ed15
